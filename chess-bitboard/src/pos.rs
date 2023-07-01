@@ -62,6 +62,22 @@ impl Pos {
         })        
     }
 
+    #[inline(always)]
+    pub const fn file(self) -> File {
+        match File::from_u8(self as u8 / 8) {
+            Some(rank) => rank,
+            None => unreachable!(),
+        }
+    }
+
+    #[inline(always)]
+    pub const fn rank(self) -> Rank {
+        match Rank::from_u8(self as u8 % 8) {
+            Some(rank) => rank,
+            None => unreachable!(),
+        }
+    }
+
     #[inline]
     pub const fn to_u8(self) -> u8 {
         self as u8

@@ -195,7 +195,3 @@ impl FromIterator<Pos> for BitBoard {
         board
     }
 }
-
-pub fn asm(rank: Rank) -> BitBoard {
-    BitBoard::from_iter(rank)
-}
