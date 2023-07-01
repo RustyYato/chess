@@ -1,5 +1,4 @@
 #![no_std]
-#![forbid(unsafe_code)]
 
 mod fmt;
 mod ops;
@@ -176,6 +175,17 @@ impl Iterator for BitBoardIter {
 
         (remaining, Some(remaining))
     }
+
+    #[cfg(target_feature = "bmi2")]
+    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        let x = unsafe { core::arch::x86_64::_pdep_u64(1 << n, self.0.to_u64()) }.trailing_zeros()
+            as u8;
+        let pos = Pos::from_u8(x)?;
+        let mask = (1 << (1 + pos as u32)) - 1;
+        self.0 -= BitBoard::from(mask);
+        Some(pos)
+    }
 }
 
 impl IntoIterator for BitBoard {
@@ -214,5 +224,12 @@ impl From<Rank> for BitBoard {
     #[inline]
     fn from(value: Rank) -> Self {
         BitBoard::from_rank(value)
+    }
+}
+
+impl From<u64> for BitBoard {
+    #[inline]
+    fn from(value: u64) -> Self {
+        BitBoard::from_u64(value)
     }
 }

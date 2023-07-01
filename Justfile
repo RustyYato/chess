@@ -7,3 +7,5 @@ rook-rays:
 
 bishop-rays:
     cargo run --bin bishop_rays > chess-lookup/src/bishop_rays.rs
+
+lookup: rook-rays bishop-rays
