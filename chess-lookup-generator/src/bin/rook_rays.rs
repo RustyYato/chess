@@ -1,9 +1,9 @@
-use chess_bitboard::{BitBoard, Pos};
+use chess_bitboard::Pos;
 
 fn main() {
     println!("static RAYS: [u64; 64] = [");
     for pos in Pos::all() {
-        let board = (BitBoard::from(pos.rank()) | BitBoard::from(pos.file())) - BitBoard::from(pos);
+        let board = chess_lookup_generator::rook_rays(pos);
 
         println!("    0x{:x},", board.to_u64());
     }

@@ -5,4 +5,5 @@ resolver = '2'
 members = [
     'chess-bitboard',
     'chess-lookup',
+    'chess-lookup-generator'
 ]
