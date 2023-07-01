@@ -1,3 +1,5 @@
+use core::ops::Range;
+
 #[rustfmt::skip]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Pos {
@@ -66,8 +68,8 @@ impl Pos {
     }
 
     #[inline]
-    pub const fn all() -> PosIter {
-        PosIter { pos: 0 }
+    pub const fn all() -> AllPosIter {
+        AllPosIter { pos: 0 }
     }
 }
 
@@ -93,8 +95,13 @@ impl File {
     }
 
     #[inline]
-    pub const fn all() -> FileIter {
-        FileIter { pos: 0 }
+    pub const fn all() -> AllFileIter {
+        AllFileIter { range: 0..8 }
+    }
+
+    #[inline]
+    pub const fn iter(self) -> FileIter {
+        FileIter { file: self, ranks: Rank::all() }
     }
 }
 
@@ -120,17 +127,22 @@ impl Rank {
     }
 
     #[inline]
-    pub const fn all() -> RankIter {
-        RankIter { pos: 0 }
+    pub const fn all() -> AllRankIter {
+        AllRankIter { range: 0..8 }
+    }
+
+    #[inline]
+    pub const fn iter(self) -> RankIter {
+        RankIter { rank: self, files: File::all() }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct PosIter {
+pub struct AllPosIter {
     pos: u8
 }
 
-impl Iterator for PosIter {
+impl Iterator for AllPosIter {
     type Item = Pos;
 
     #[inline]
@@ -147,47 +159,132 @@ impl Iterator for PosIter {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct FileIter {
-    pos: u8
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AllFileIter {
+    range: Range<u8>
 }
 
-impl Iterator for FileIter {
+impl Iterator for AllFileIter {
     type Item = File;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let pos = File::from_u8(self.pos)?;
-        self.pos += 1;
-        Some(pos)
+        Some(File::from_u8(self.range.next()?).unwrap())
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        Some(File::from_u8(self.range.nth(n)?).unwrap())
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = usize::from(8 - self.pos);
-        (remaining, Some(remaining))
+        self.range.size_hint()
     }
 }
 
+impl DoubleEndedIterator for AllFileIter {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        Some(File::from_u8(self.range.next_back()?).unwrap())
+    }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct RankIter {
-    pos: u8
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        Some(File::from_u8(self.range.nth_back(n)?).unwrap())
+    }
 }
 
-impl Iterator for RankIter {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AllRankIter {
+    range: Range<u8>
+}
+
+impl Iterator for AllRankIter {
     type Item = Rank;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        let pos = Rank::from_u8(self.pos)?;
-        self.pos += 1;
-        Some(pos)
+        Some(Rank::from_u8(self.range.next()?).unwrap())
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        Some(Rank::from_u8(self.range.nth(n)?).unwrap())
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = usize::from(8 - self.pos);
-        (remaining, Some(remaining))
+        self.range.size_hint()
+    }
+}
+
+impl DoubleEndedIterator for AllRankIter {
+    #[inline]
+    fn next_back(&mut self) -> Option<Self::Item> {
+        Some(Rank::from_u8(self.range.next_back()?).unwrap())
+    }
+
+    fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
+        Some(Rank::from_u8(self.range.nth_back(n)?).unwrap())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FileIter {
+    file: File,
+    ranks: AllRankIter,
+}
+
+impl Iterator for FileIter {
+    type Item = Pos;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        let rank = self.ranks.next()?;
+        Some(Pos::new(self.file, rank))
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.ranks.size_hint()
+    }
+}
+
+impl IntoIterator for File {
+    type Item = Pos;
+    type IntoIter = FileIter;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RankIter {
+    rank: Rank,
+    files: AllFileIter,
+}
+
+impl Iterator for RankIter {
+    type Item = Pos;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        let file = self.files.next()?;
+        Some(Pos::new(file, self.rank))
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.files.size_hint()
+    }
+}
+
+impl IntoIterator for Rank {
+    type Item = Pos;
+    type IntoIter = RankIter;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }

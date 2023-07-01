@@ -5,6 +5,8 @@ mod fmt;
 mod ops;
 mod pos;
 
+use core::num::NonZeroU64;
+
 pub use pos::{File, Pos, Rank};
 
 #[repr(transparent)]
@@ -30,6 +32,23 @@ impl BitBoard {
     #[inline(always)]
     pub const fn from_pos(pos: Pos) -> Self {
         Self(1 << pos as u8)
+    }
+
+    #[inline(always)]
+    pub const fn from_file(file: File) -> Self {
+        const FIRST_FILE: u64 = 0xff;
+        Self(FIRST_FILE << (file as u8 * 8))
+    }
+
+    #[inline(always)]
+    pub const fn from_rank(rank: Rank) -> Self {
+        const FIRST_RANK: u64 = 0x0101010101010101;
+        Self(FIRST_RANK << rank as u8)
+    }
+
+    #[inline(always)]
+    pub const fn contains(self, pos: Pos) -> bool {
+        self.and(BitBoard::from_pos(pos)).any()
     }
 
     #[inline(always)]
@@ -76,4 +95,83 @@ impl BitBoard {
     pub const fn diff(self, other: Self) -> Self {
         self.and(other.not())
     }
+
+    #[inline(always)]
+    pub fn pop(&mut self) -> Option<Pos> {
+        let pos = NonZeroU64::new(self.0)?;
+        let zeros = pos.trailing_zeros() as u8;
+        let pos = Pos::from_u8(zeros).unwrap();
+        *self ^= BitBoard::from_pos(pos);
+        Some(pos)
+    }
+
+    #[inline(always)]
+    pub const fn iter(self) -> BitBoardIter {
+        BitBoardIter(self)
+    }
+
+    #[inline(always)]
+    pub const fn count(self) -> u8 {
+        self.0.count_ones() as u8
+    }
+
+    #[inline(always)]
+    pub const fn any(self) -> bool {
+        self.0 != 0
+    }
+
+    #[inline(always)]
+    pub const fn none(self) -> bool {
+        self.0 == 0
+    }
+
+    #[inline(always)]
+    pub const fn all(self) -> bool {
+        self.not().none()
+    }
+
+    #[inline(always)]
+    pub const fn some(self) -> bool {
+        self.not().any()
+    }
+}
+
+#[repr(transparent)]
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct BitBoardIter(BitBoard);
+
+impl Iterator for BitBoardIter {
+    type Item = Pos;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = usize::from(self.0.count());
+
+        (remaining, Some(remaining))
+    }
+}
+
+impl IntoIterator for BitBoard {
+    type Item = Pos;
+    type IntoIter = BitBoardIter;
+
+    #[inline(always)]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl FromIterator<Pos> for BitBoard {
+    fn from_iter<T: IntoIterator<Item = Pos>>(iter: T) -> Self {
+        let mut board = BitBoard::empty();
+        iter.into_iter().for_each(|pos| board.set(pos));
+        board
+    }
+}
+
+pub fn asm(rank: Rank) -> BitBoard {
+    BitBoard::from_iter(rank)
 }

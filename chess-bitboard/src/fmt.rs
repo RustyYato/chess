@@ -1,6 +1,6 @@
 use core::fmt::{Binary, Debug, Formatter, LowerHex, Result, UpperHex};
 
-use crate::BitBoard;
+use crate::{BitBoard, Rank};
 
 impl Binary for BitBoard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -22,19 +22,17 @@ impl LowerHex for BitBoard {
 
 impl Debug for BitBoard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        for i in 0..64 {
-            let bit = self.0 & (1 << i) != 0;
+        for rank in Rank::all().rev() {
+            for pos in rank {
+                let c = match self.contains(pos) {
+                    true => "# ",
+                    false => ". ",
+                };
 
-            let c = match bit {
-                true => "# ",
-                false => ". ",
-            };
-
-            core::fmt::Display::fmt(c, f)?;
-
-            if i % 8 == 7 {
-                writeln!(f)?
+                core::fmt::Display::fmt(c, f)?;
             }
+
+            writeln!(f)?
         }
 
         Ok(())
