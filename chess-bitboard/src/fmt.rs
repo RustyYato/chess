@@ -4,19 +4,19 @@ use crate::{BitBoard, Rank};
 
 impl Binary for BitBoard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        Binary::fmt(&self.0, f)
+        write!(f, "{:0>64b}", self.0)
     }
 }
 
 impl UpperHex for BitBoard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        UpperHex::fmt(&self.0, f)
+        write!(f, "{:0>16X}", self.0)
     }
 }
 
 impl LowerHex for BitBoard {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        LowerHex::fmt(&self.0, f)
+        write!(f, "{:0>16x}", self.0)
     }
 }
 
