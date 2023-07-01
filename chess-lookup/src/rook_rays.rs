@@ -1,4 +1,4 @@
-static ROOK_RAYS: [u64; 64] = [
+static RAYS: [u64; 64] = [
     0x1010101010101fe,
     0x2020202020202fd,
     0x4040404040404fb,
@@ -68,6 +68,6 @@ static ROOK_RAYS: [u64; 64] = [
 use chess_bitboard::{BitBoard, Pos};
 
 pub fn get(pos: Pos) -> BitBoard {
-    BitBoard::from_u64(ROOK_RAYS[pos as usize])
+    BitBoard::from_u64(RAYS[pos as usize])
 }
 

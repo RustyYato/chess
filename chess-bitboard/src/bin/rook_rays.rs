@@ -1,7 +1,7 @@
 use chess_bitboard::{BitBoard, Pos};
 
 fn main() {
-    println!("static ROOK_RAYS: [u64; 64] = [");
+    println!("static RAYS: [u64; 64] = [");
     for pos in Pos::all() {
         let board = (BitBoard::from(pos.rank()) | BitBoard::from(pos.file())) - BitBoard::from(pos);
 
@@ -13,7 +13,7 @@ fn main() {
 use chess_bitboard::{{BitBoard, Pos}};
 
 pub fn get(pos: Pos) -> BitBoard {{
-    BitBoard::from_u64(ROOK_RAYS[pos as usize])
+    BitBoard::from_u64(RAYS[pos as usize])
 }}
 "
     )
