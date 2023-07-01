@@ -1,4 +1,4 @@
-static RAYS: [u64; 64] = [
+pub(super) static RAYS: [u64; 64] = [
     0x1010101010101fe,
     0x2020202020202fd,
     0x4040404040404fb,
@@ -64,10 +64,3 @@ static RAYS: [u64; 64] = [
     0xbf40404040404040,
     0x7f80808080808080,
 ];
-
-use chess_bitboard::{BitBoard, Pos};
-
-pub fn get(pos: Pos) -> BitBoard {
-    BitBoard::from_u64(RAYS[pos as usize])
-}
-
