@@ -195,3 +195,24 @@ impl FromIterator<Pos> for BitBoard {
         board
     }
 }
+
+impl From<Pos> for BitBoard {
+    #[inline]
+    fn from(value: Pos) -> Self {
+        BitBoard::from_pos(value)
+    }
+}
+
+impl From<File> for BitBoard {
+    #[inline]
+    fn from(value: File) -> Self {
+        BitBoard::from_file(value)
+    }
+}
+
+impl From<Rank> for BitBoard {
+    #[inline]
+    fn from(value: Rank) -> Self {
+        BitBoard::from_rank(value)
+    }
+}

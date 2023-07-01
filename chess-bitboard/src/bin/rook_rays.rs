@@ -3,8 +3,7 @@ use chess_bitboard::{BitBoard, Pos};
 fn main() {
     println!("static ROOK_RAYS: [u64; 64] = [");
     for pos in Pos::all() {
-        let board = (BitBoard::from_rank(pos.rank()) | BitBoard::from_file(pos.file()))
-            - BitBoard::from_pos(pos);
+        let board = (BitBoard::from(pos.rank()) | BitBoard::from(pos.file())) - BitBoard::from(pos);
 
         println!("    0x{:x},", board.to_u64());
     }
