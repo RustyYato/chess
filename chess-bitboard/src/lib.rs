@@ -182,7 +182,7 @@ impl Iterator for BitBoardIter {
         let x = unsafe { core::arch::x86_64::_pdep_u64(1 << n, self.0.to_u64()) }.trailing_zeros()
             as u8;
         let pos = Pos::from_u8(x)?;
-        let mask = (1 << (1 + pos as u32)) - 1;
+        let mask = ((1u128 << (1 + pos as u32)) - 1) as u64;
         self.0 -= BitBoard::from(mask);
         Some(pos)
     }
