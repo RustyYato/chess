@@ -1,3 +1,8 @@
+use std::sync::{
+    atomic::{AtomicBool, AtomicUsize, Ordering::Relaxed},
+    Mutex,
+};
+
 use chess_bitboard::{BitBoard, File, Pos, Rank};
 use rand::prelude::*;
 
@@ -15,6 +20,7 @@ fn main() {
     let mut current_offset = 0;
 
     for pos in Pos::all() {
+        eprintln!("{pos:?}");
         let mut rook_moves =
             (BitBoard::from(pos.rank()) | BitBoard::from(pos.file())) - BitBoard::from(pos);
 
@@ -86,21 +92,7 @@ fn main() {
 
         let mut new_offset = current_offset;
 
-        'next_offset: for offset in 0..current_offset {
-            for (j, blocker) in all_blockers.iter().enumerate() {
-                if (rays[offset + j] & rook_rays).any() {
-                    continue 'next_offset;
-                }
-            }
-
-            dbg!();
-            new_offset = offset;
-            break;
-        }
-
-        let mut rng = rand::thread_rng();
-        let mut rng = SmallRng::seed_from_u64(0xDEADBEEF12345678);
-        let mut best = 0;
+        let mut best = AtomicUsize::new(0);
 
         assert!(data.len().is_power_of_two());
 
@@ -113,51 +105,74 @@ fn main() {
 
         assert!(data.len().trailing_zeros() >= bits);
 
-        eprintln!("{pos:?}");
+        let finished = AtomicBool::new(false);
+        let output = Mutex::new(None);
+
         // eprintln!("{rook_moves:?}");
-        'magic: loop {
-            let magic = rng.gen::<u64>() & rng.gen::<u64>() & rng.gen::<u64>();
+        std::thread::scope(|s| {
+            for _ in 0..23 {
+                s.spawn(|| {
+                    let mut data = Vec::new();
+                    let mut rays = Vec::new();
+                    let mut rng = SmallRng::from_seed(rand::random());
 
-            if magic.wrapping_mul(rook_moves.to_u64()).count_ones() < 6 {
-                continue;
-            }
+                    'magic: loop {
+                        let magic = rng.gen::<u64>() & rng.gen::<u64>() & rng.gen::<u64>();
 
-            let shift = (all_blockers.len() as u64).leading_zeros() + 1;
-            // let offset = rng.gen_range(0..data.len() as u64 / 2);
-            let offset = new_offset;
+                        if magic.wrapping_mul(rook_moves.to_u64()).count_ones() < 6 {
+                            continue;
+                        }
 
-            data.clone_from(&old_data);
-            rays.clone_from(&old_rays);
+                        if finished.load(Relaxed) {
+                            break;
+                        }
 
-            for (i, p) in all_blockers.iter_mut().enumerate() {
-                let index = p.puzzle.to_u64().wrapping_mul(magic) >> shift;
-                let index = index as usize + offset;
-                let board = &mut data[index];
+                        let shift = (all_blockers.len() as u64).leading_zeros() + 1;
+                        // let offset = rng.gen_range(0..data.len() as u64 / 2);
+                        let offset = new_offset;
 
-                if board.none() || *board == p.solution {
-                    *board = p.solution;
-                    rays[index] |= rook_rays;
-                } else {
-                    best = best.max(i);
-                    if i == best && best != 0 {
-                        eprintln!(
-                            "{:5.1}% ({i})",
-                            i as f64 / all_blockers.len() as f64 * 100.0
-                        );
+                        data.clone_from(&old_data);
+                        rays.clone_from(&old_rays);
+
+                        for (i, p) in all_blockers.iter().enumerate() {
+                            let index = p.puzzle.to_u64().wrapping_mul(magic) >> shift;
+                            let index = index as usize + offset;
+                            let board = &mut data[index];
+
+                            if board.none() || *board == p.solution {
+                                *board = p.solution;
+                                rays[index] |= rook_rays;
+                            } else {
+                                let best = best.fetch_max(i, Relaxed);
+                                if best < i {
+                                    eprintln!(
+                                        "{:5.1}% ({i})",
+                                        i as f64 / all_blockers.len() as f64 * 100.0
+                                    );
+                                }
+                                continue 'magic;
+                            }
+                        }
+
+                        eprintln!("magic = {magic}, shift {shift}, offset = {offset}");
+
+                        if !finished.swap(true, Relaxed) {
+                            let output = &mut *output.try_lock().unwrap();
+                            *output = Some((magic, shift, offset, data, rays));
+                        }
+
+                        break;
                     }
-                    continue 'magic;
-                }
+                });
             }
+        });
 
-            eprintln!("magic = {magic}, shift {shift}, offset = {offset}");
-
-            // panic!()
-            break;
-        }
+        let (magic, shift, offset, new_data, new_rays) =
+            { output }.get_mut().unwrap().take().unwrap();
+        data = new_data;
+        rays = new_rays;
 
         current_offset = (new_offset + all_blockers.len()).max(current_offset);
-
-        // panic!()
     }
 
     eprintln!("{current_offset}")
