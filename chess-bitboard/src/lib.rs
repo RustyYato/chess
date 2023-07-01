@@ -97,6 +97,30 @@ impl BitBoard {
     }
 
     #[inline(always)]
+    pub const fn shift_up(self) -> Self {
+        let board = self.diff(Self::from_rank(Rank::_8));
+        Self(board.0 << 1)
+    }
+
+    #[inline(always)]
+    pub const fn shift_down(self) -> Self {
+        let board = self.diff(Self::from_rank(Rank::_1));
+        Self(board.0 >> 1)
+    }
+
+    #[inline(always)]
+    pub const fn shift_left(self) -> Self {
+        let board = self.diff(Self::from_file(File::A));
+        Self(board.0 >> 8)
+    }
+
+    #[inline(always)]
+    pub const fn shift_right(self) -> Self {
+        let board = self.diff(Self::from_file(File::H));
+        Self(board.0 << 8)
+    }
+
+    #[inline(always)]
     pub fn pop(&mut self) -> Option<Pos> {
         let pos = NonZeroU64::new(self.0)?;
         let zeros = pos.trailing_zeros() as u8;
