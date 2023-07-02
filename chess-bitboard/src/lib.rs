@@ -1,11 +1,15 @@
 #![no_std]
 
+mod color;
 mod fmt;
 mod ops;
+mod piece;
 mod pos;
 
 use core::num::NonZeroU64;
 
+pub use color::Color;
+pub use piece::Piece;
 pub use pos::{File, Pos, Rank};
 
 #[repr(transparent)]
@@ -129,6 +133,15 @@ impl BitBoard {
     }
 
     #[inline(always)]
+    pub unsafe fn pop_unchecked(&mut self) -> Pos {
+        let pos = unsafe { NonZeroU64::new_unchecked(self.0) };
+        let zeros = pos.trailing_zeros() as u8;
+        let pos = Pos::from_u8(zeros).unwrap();
+        *self ^= BitBoard::from_pos(pos);
+        pos
+    }
+
+    #[inline(always)]
     pub const fn iter(self) -> BitBoardIter {
         BitBoardIter(self)
     }
@@ -166,10 +179,12 @@ pub struct BitBoardIter(BitBoard);
 impl Iterator for BitBoardIter {
     type Item = Pos;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.0.pop()
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let remaining = usize::from(self.0.count());
 
@@ -199,6 +214,7 @@ impl IntoIterator for BitBoard {
 }
 
 impl FromIterator<Pos> for BitBoard {
+    #[inline]
     fn from_iter<T: IntoIterator<Item = Pos>>(iter: T) -> Self {
         let mut board = BitBoard::empty();
         iter.into_iter().for_each(|pos| board.set(pos));

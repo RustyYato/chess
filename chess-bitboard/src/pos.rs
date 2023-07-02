@@ -1,5 +1,6 @@
 use core::ops::Range;
 
+#[repr(u8)]
 #[rustfmt::skip]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Pos {
@@ -13,6 +14,7 @@ pub enum Pos {
     H1,    H2,    H3,    H4,    H5,    H6,    H7,    H8,
 }
 
+#[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum File {
     A,
@@ -25,6 +27,7 @@ pub enum File {
     H,
 }
 
+#[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Rank {
     _1,
@@ -302,5 +305,21 @@ impl IntoIterator for Rank {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
+    }
+}
+
+impl<T> core::ops::Index<Pos> for [T; 64] {
+    type Output = T;
+
+    #[inline]
+    fn index(&self, index: Pos) -> &Self::Output {
+        &self[index as usize]
+    }
+}
+
+impl<T> core::ops::IndexMut<Pos> for [T; 64] {
+    #[inline]
+    fn index_mut(&mut self, index: Pos) -> &mut Self::Output {
+        &mut self[index as usize]
     }
 }

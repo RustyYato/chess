@@ -1,10 +1,12 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
-use chess_bitboard::{BitBoard, Pos};
+use chess_bitboard::{BitBoard, Color, Pos};
 
 mod between;
 mod bishop_moves;
 mod bishop_rays;
+mod knight_moves;
+mod pawn_attacks;
 mod rook_moves;
 mod rook_rays;
 
@@ -17,16 +19,27 @@ struct Magic {
 
 #[inline]
 pub fn rook_rays(pos: Pos) -> BitBoard {
-    BitBoard::from(rook_rays::RAYS[pos as usize])
+    BitBoard::from(rook_rays::RAYS[pos])
 }
 
 #[inline]
 pub fn bishop_rays(pos: Pos) -> BitBoard {
-    BitBoard::from(bishop_rays::RAYS[pos as usize])
+    BitBoard::from(bishop_rays::RAYS[pos])
 }
 
+#[inline]
+pub fn knight_moves(pos: Pos) -> BitBoard {
+    BitBoard::from(knight_moves::MOVES[pos])
+}
+
+#[inline]
+pub fn pawn_attacks_moves(pos: Pos, color: Color) -> BitBoard {
+    BitBoard::from(pawn_attacks::PAWN_ATTACKS[pos][color])
+}
+
+#[inline]
 pub fn bishop_moves(pos: Pos, all_pieces: BitBoard) -> BitBoard {
-    let magic = &bishop_moves::MOVES_MAGIC[pos as usize];
+    let magic = &bishop_moves::MOVES_MAGIC[pos];
     let blockers = magic.mask & all_pieces.to_u64();
     let index = blockers.wrapping_mul(magic.factor) >> magic.shift;
     let index = index.wrapping_add(u64::from(magic.offset)) as usize;
@@ -38,8 +51,9 @@ pub fn bishop_moves(pos: Pos, all_pieces: BitBoard) -> BitBoard {
     }
 }
 
+#[inline]
 pub fn rook_moves(pos: Pos, all_pieces: BitBoard) -> BitBoard {
-    let magic = &rook_moves::MOVES_MAGIC[pos as usize];
+    let magic = &rook_moves::MOVES_MAGIC[pos];
     let blockers = magic.mask & all_pieces.to_u64();
     let index = blockers.wrapping_mul(magic.factor) >> magic.shift;
     let index = index.wrapping_add(u64::from(magic.offset)) as usize;
@@ -51,6 +65,13 @@ pub fn rook_moves(pos: Pos, all_pieces: BitBoard) -> BitBoard {
     }
 }
 
+#[inline]
 pub fn between(a: Pos, b: Pos) -> BitBoard {
     BitBoard::from(between::SOLUTIONS[a as usize][b as usize])
 }
+
+pub const PAWN_DOUBLE_SOURCE: BitBoard =
+    BitBoard::from_rank(chess_bitboard::Rank::_2).or(BitBoard::from_rank(chess_bitboard::Rank::_7));
+
+pub const PAWN_DOUBLE_DEST: BitBoard =
+    BitBoard::from_rank(chess_bitboard::Rank::_4).or(BitBoard::from_rank(chess_bitboard::Rank::_5));

@@ -187,3 +187,34 @@ pub fn between() -> Vec<BitBoard> {
 
     boards
 }
+
+pub fn knight_moves(pos: Pos) -> BitBoard {
+    let mut moves = BitBoard::empty();
+    let pos_bb = BitBoard::from(pos);
+
+    moves |= pos_bb.shift_up().shift_up().shift_left();
+    moves |= pos_bb.shift_up().shift_up().shift_right();
+    moves |= pos_bb.shift_down().shift_down().shift_left();
+    moves |= pos_bb.shift_down().shift_down().shift_right();
+
+    moves |= pos_bb.shift_left().shift_left().shift_up();
+    moves |= pos_bb.shift_left().shift_left().shift_down();
+    moves |= pos_bb.shift_right().shift_right().shift_up();
+    moves |= pos_bb.shift_right().shift_right().shift_down();
+
+    moves
+}
+
+pub fn pawn_attacks(pos: Pos) -> [BitBoard; 2] {
+    let pos_bb = BitBoard::from(pos);
+
+    let mut white_moves = BitBoard::empty();
+    white_moves |= pos_bb.shift_up().shift_left();
+    white_moves |= pos_bb.shift_up().shift_right();
+
+    let mut black_moves = BitBoard::empty();
+    black_moves |= pos_bb.shift_down().shift_left();
+    black_moves |= pos_bb.shift_down().shift_right();
+
+    [white_moves, black_moves]
+}
