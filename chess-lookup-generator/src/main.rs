@@ -20,6 +20,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     write_rook_rays(target_dir)?;
     write_bishop_rays(target_dir)?;
+    write_between(target_dir)?;
     write_bishop_moves(target_dir)?;
     write_rook_moves(target_dir)?;
 
@@ -85,5 +86,28 @@ fn write_magic_table<W: std::io::Write>(table: MagicTable, mut f: W) -> Result<(
         writeln!(f, "    0x{:x},", board.to_u64())?;
     }
     writeln!(f, "];")?;
+    Ok(())
+}
+
+fn write_between(target_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let between = chess_lookup_generator::between();
+    let mut table = BufWriter::new(File::create(target_dir.join("between.rs"))?);
+
+    writeln!(table, "pub(super) static SOLUTIONS: [[u64; 64]; 64] = [")?;
+    for (i, boards) in between.chunks_exact(64).enumerate() {
+        writeln!(table, "    [")?;
+        for (j, &board) in boards.iter().enumerate() {
+            writeln!(table, "        0x{:x},", board.to_u64())?;
+            if board.any() {
+                let i = Pos::from_u8(i as u8).unwrap();
+                let j = Pos::from_u8(j as u8).unwrap();
+                eprintln!("{i:?} {j:?}");
+                eprintln!("{board:?}");
+            }
+        }
+        writeln!(table, "    ],")?;
+    }
+    writeln!(table, "];")?;
+
     Ok(())
 }

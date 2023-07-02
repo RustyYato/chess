@@ -2,6 +2,7 @@
 
 use chess_bitboard::{BitBoard, Pos};
 
+mod between;
 mod bishop_moves;
 mod bishop_rays;
 mod rook_moves;
@@ -48,4 +49,8 @@ pub fn rook_moves(pos: Pos, all_pieces: BitBoard) -> BitBoard {
     } else {
         BitBoard::from(unsafe { *rook_moves::SOLUTIONS.get_unchecked(index) })
     }
+}
+
+pub fn between(a: Pos, b: Pos) -> BitBoard {
+    BitBoard::from(between::SOLUTIONS[a as usize][b as usize])
 }

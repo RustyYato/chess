@@ -128,3 +128,62 @@ pub fn bishop_moves() -> magic::MagicTable {
         },
     )
 }
+
+pub fn between() -> Vec<BitBoard> {
+    let mut boards = Vec::new();
+
+    for a in Pos::all() {
+        let a_file = a.file() as i8;
+        let a_rank = a.rank() as i8;
+
+        for b in Pos::all() {
+            if a == b {
+                boards.push(BitBoard::empty());
+                continue;
+            }
+
+            let b_file = b.file() as i8;
+            let b_rank = b.rank() as i8;
+
+            boards.push(if a_file == b_file {
+                Rank::all()
+                    .filter(|&rank| a.rank() < rank && rank < b.rank())
+                    .map(|rank| Pos::new(a.file(), rank))
+                    .collect()
+            } else if a_rank == b_rank {
+                File::all()
+                    .filter(|&file| a.file() < file && file < b.file())
+                    .map(|file| Pos::new(file, a.rank()))
+                    .collect()
+            } else {
+                let (file, rank, dist) = if a_file < b_file {
+                    (a_file as u8, a_rank as u8, b_file - a_file)
+                } else {
+                    (b_file as u8, b_rank as u8, a_file - b_file)
+                };
+
+                'bishop_moves: {
+                    let sign = if a_file - b_file == a_rank - b_rank {
+                        1
+                    } else if a_file - b_file == b_rank - a_rank {
+                        -1
+                    } else {
+                        break 'bishop_moves BitBoard::empty();
+                    };
+
+                    (1..8)
+                        .take(dist as usize - 1)
+                        .map_while(|i| {
+                            Some(Pos::new(
+                                File::from_u8(file.wrapping_add_signed(i))?,
+                                Rank::from_u8(rank.wrapping_add_signed(sign * i))?,
+                            ))
+                        })
+                        .collect()
+                }
+            });
+        }
+    }
+
+    boards
+}
