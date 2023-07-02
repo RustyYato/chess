@@ -1,4 +1,5 @@
 use chess_bitboard::{BitBoard, File, Pos, Rank};
+pub use magic::MagicTable;
 
 mod magic;
 

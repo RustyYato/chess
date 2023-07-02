@@ -20,7 +20,7 @@ pub struct MagicTableEntry {
 
 pub struct MagicTable {
     pub entries: Vec<MagicTableEntry>,
-    pub table: Vec<BitBoard>,
+    pub data: Vec<BitBoard>,
 }
 
 pub fn generate_tables<F, S>(get_rays_and_moves: F, solve: S) -> MagicTable
@@ -150,5 +150,8 @@ where
 
     eprintln!("{current_offset}");
 
-    MagicTable { entries, table }
+    MagicTable {
+        entries,
+        data: table,
+    }
 }
