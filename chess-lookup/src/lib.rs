@@ -1,6 +1,6 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
-use chess_bitboard::{BitBoard, Color, Pos};
+use chess_bitboard::{BitBoard, Color, File, Pos, Rank};
 
 mod between;
 mod bishop_moves;
@@ -75,3 +75,51 @@ pub const PAWN_DOUBLE_SOURCE: BitBoard =
 
 pub const PAWN_DOUBLE_DEST: BitBoard =
     BitBoard::from_rank(chess_bitboard::Rank::_4).or(BitBoard::from_rank(chess_bitboard::Rank::_5));
+
+pub const BACKRANK: [Rank; 2] = [Rank::_1, Rank::_8];
+pub const BACKRANK_BB: [BitBoard; 2] =
+    [BitBoard::from_rank(Rank::_1), BitBoard::from_rank(Rank::_8)];
+
+pub const CASTLE_MOVES: BitBoard = BitBoard::empty()
+    .with(Pos::C1)
+    .with(Pos::C8)
+    .with(Pos::E1)
+    .with(Pos::E8)
+    .with(Pos::G1)
+    .with(Pos::G8);
+
+pub const PAWN_DOUBLE_MOVE: [BitBoard; 2] = [
+    BitBoard::from_rank(Rank::_2).or(BitBoard::from_rank(Rank::_4)),
+    BitBoard::from_rank(Rank::_5).or(BitBoard::from_rank(Rank::_7)),
+];
+
+pub const ROOK_CASTLE_QUEENSIDE: BitBoard =
+    BitBoard::from_file(File::A).or(BitBoard::from_file(File::D));
+pub const ROOK_CASTLE_KINGSIDE: BitBoard =
+    BitBoard::from_file(File::H).or(BitBoard::from_file(File::F));
+
+pub const CASTLE_ROOK_START: [File; 8] = [
+    File::A,
+    File::A,
+    File::A,
+    File::A,
+    File::H,
+    File::H,
+    File::H,
+    File::H,
+];
+pub const CASTLE_ROOK_END: [File; 8] = [
+    File::D,
+    File::D,
+    File::D,
+    File::D,
+    File::F,
+    File::F,
+    File::F,
+    File::F,
+];
+
+pub const PROMOTION_RANK: [Rank; 2] = [Rank::_8, Rank::_1];
+
+pub const PAWN_DOUBLE_MOVE_SOURCE_RANK: [Rank; 2] = [Rank::_2, Rank::_7];
+pub const PAWN_DOUBLE_MOVE_DEST_RANK: [Rank; 2] = [Rank::_4, Rank::_5];

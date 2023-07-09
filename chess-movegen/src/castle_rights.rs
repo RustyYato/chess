@@ -1,6 +1,64 @@
 use std::fmt::Write;
 
-use chess_bitboard::{Color, Side};
+use chess_bitboard::{Color, Pos, Side};
+
+const __: CastleRights = CastleRights::empty().not();
+const WK: CastleRights = CastleRights::empty().with(Side::King, Color::White).not();
+const WQ: CastleRights = CastleRights::empty().with(Side::Queen, Color::White).not();
+const WB: CastleRights = CastleRights::empty()
+    .with(Side::Queen, Color::White)
+    .with(Side::King, Color::White)
+    .not();
+
+const BK: CastleRights = CastleRights::empty().with(Side::King, Color::Black).not();
+const BQ: CastleRights = CastleRights::empty().with(Side::Queen, Color::Black).not();
+const BB: CastleRights = CastleRights::empty()
+    .with(Side::Queen, Color::Black)
+    .with(Side::King, Color::Black)
+    .not();
+
+#[rustfmt::skip]
+const CASTLE_RIGHTS_PER_SQ_INIT: [[CastleRights; 64]; 2] = [
+    [
+    WQ, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, __, 
+    WB, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, __, 
+    WK, __, __, __, __, __, __, __, 
+],
+[
+    __, __, __, __, __, __, __, BQ, 
+    __, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, BB, 
+    __, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, __, 
+    __, __, __, __, __, __, __, BK, 
+]];
+
+static CASTLE_RIGHTS_PER_SQ: [[CastleRights; 64]; 2] = CASTLE_RIGHTS_PER_SQ_INIT;
+
+const _: () = {
+    assert!(CASTLE_RIGHTS_PER_SQ_INIT[Color::White as usize][Pos::A1 as usize].0 == WQ.0);
+    assert!(CASTLE_RIGHTS_PER_SQ_INIT[Color::White as usize][Pos::H1 as usize].0 == WK.0);
+    assert!(CASTLE_RIGHTS_PER_SQ_INIT[Color::White as usize][Pos::E1 as usize].0 == WB.0);
+
+    assert!(CASTLE_RIGHTS_PER_SQ_INIT[Color::Black as usize][Pos::A8 as usize].0 == BQ.0);
+    assert!(CASTLE_RIGHTS_PER_SQ_INIT[Color::Black as usize][Pos::H8 as usize].0 == BK.0);
+    assert!(CASTLE_RIGHTS_PER_SQ_INIT[Color::Black as usize][Pos::E8 as usize].0 == BB.0);
+
+    assert!(__.0 != WQ.0);
+    assert!(__.0 != WK.0);
+    assert!(__.0 != WB.0);
+
+    assert!(__.0 != BQ.0);
+    assert!(__.0 != BK.0);
+    assert!(__.0 != BB.0);
+};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct CastleRights(u8);
@@ -47,6 +105,11 @@ impl CastleRights {
     }
 
     #[inline]
+    pub const fn not(self) -> Self {
+        Self(!self.0)
+    }
+
+    #[inline]
     pub const fn without(self, side: Side, color: Color) -> Self {
         Self(self.0 & !(1 << offset(side, color)))
     }
@@ -74,5 +137,10 @@ impl CastleRights {
     #[inline]
     pub const fn contains_color(self, color: Color) -> bool {
         self.0 & ((1 << offset(Side::King, color)) | (1 << offset(Side::Queen, color))) != 0
+    }
+
+    pub(crate) fn remove_for_sq(&mut self, turn: Color, end: Pos) {
+        let rights = CASTLE_RIGHTS_PER_SQ[turn][end].0;
+        self.0 &= rights;
     }
 }

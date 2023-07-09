@@ -1,5 +1,7 @@
 use core::ops::Range;
 
+use crate::Side;
+
 #[repr(u8)]
 #[rustfmt::skip]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -122,6 +124,16 @@ impl File {
     pub const fn iter(self) -> FileIter {
         FileIter { file: self, ranks: Rank::all() }
     }
+
+    #[inline(always)]
+    pub const fn side(self) -> Side {
+        if (self as u8) < (File::E as u8) {
+            Side::Queen
+        } else {
+            Side::King
+        }
+    }
+
 }
 
 impl Rank {
@@ -334,6 +346,38 @@ impl<T> core::ops::Index<Pos> for [T; 64] {
 impl<T> core::ops::IndexMut<Pos> for [T; 64] {
     #[inline]
     fn index_mut(&mut self, index: Pos) -> &mut Self::Output {
+        &mut self[index as usize]
+    }
+}
+
+impl<T> core::ops::Index<File> for [T; 8] {
+    type Output = T;
+
+    #[inline]
+    fn index(&self, index: File) -> &Self::Output {
+        &self[index as usize]
+    }
+}
+
+impl<T> core::ops::IndexMut<File> for [T; 8] {
+    #[inline]
+    fn index_mut(&mut self, index: File) -> &mut Self::Output {
+        &mut self[index as usize]
+    }
+}
+
+impl<T> core::ops::Index<Rank> for [T; 8] {
+    type Output = T;
+
+    #[inline]
+    fn index(&self, index: Rank) -> &Self::Output {
+        &self[index as usize]
+    }
+}
+
+impl<T> core::ops::IndexMut<Rank> for [T; 8] {
+    #[inline]
+    fn index_mut(&mut self, index: Rank) -> &mut Self::Output {
         &mut self[index as usize]
     }
 }

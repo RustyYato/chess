@@ -1,4 +1,4 @@
-use std::ops::Index;
+use std::ops::{BitXor, BitXorAssign, Index};
 
 use chess_bitboard::{BitBoard, Color, Piece, Pos};
 
@@ -247,5 +247,13 @@ impl Index<Piece> for RawBoard {
     #[inline]
     fn index(&self, index: Piece) -> &Self::Output {
         &self.pieces[index]
+    }
+}
+
+impl RawBoard {
+    pub(crate) fn xor(&mut self, color: Color, piece: Piece, diff: BitBoard) {
+        debug_assert!(self.colors[color] & diff == self.pieces[piece] & diff);
+        self.colors[color] ^= diff;
+        self.pieces[piece] ^= diff;
     }
 }

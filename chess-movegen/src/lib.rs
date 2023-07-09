@@ -6,7 +6,7 @@ pub mod raw;
 
 use std::str::FromStr;
 
-use chess_bitboard::{BitBoard, Color, File, Piece, Pos, Side};
+use chess_bitboard::{BitBoard, Color, File, Piece, Pos, PromotionPiece, Side};
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Board {
     turn: Color,
@@ -17,6 +17,12 @@ pub struct Board {
     pinned: BitBoard,
     checkers: BitBoard,
     raw: raw::RawBoard,
+}
+
+pub struct ChessMove {
+    pub source: Pos,
+    pub dest: Pos,
+    pub promotion: Option<PromotionPiece>,
 }
 
 impl core::fmt::Debug for Board {
@@ -273,6 +279,131 @@ impl Board {
             chess_lookup::pawn_attacks_moves(king_pos, self.turn) & self.raw[Piece::Pawn] & opp_bb;
 
         self.checkers |= pawn_attacks;
+    }
+
+    #[inline]
+    fn enpassant_pos(&self) -> Option<Pos> {
+        self.enpassant_target
+            .map(|file| Pos::new(file, self.turn.enpassant_capture_rank()))
+    }
+
+    /// # Safety
+    ///
+    /// * There must be a piece at mv.start
+    /// * No king should be at mv.end
+    /// * The color of mv.start must be self.turn
+    /// * The color of mv.end must be !self.turn or an empty tile
+    /// * mv.promotion must only be set if the moved piece is a pawn and it is moving to the promotion rank
+    /// * mv must be a legal chess move
+    pub unsafe fn move_unchecked(&self, mv: ChessMove) -> Self {
+        let mut board = *self;
+        unsafe { self.move_unchecked_into(mv, &mut board) }
+        board
+    }
+
+    /// # Safety
+    ///
+    /// * There must be a piece at mv.start
+    /// * No king should be at mv.end
+    /// * The color of mv.start must be self.turn
+    /// * The color of mv.end must be !self.turn or an empty tile
+    /// * mv.promotion must only be set if the moved piece is a pawn and it is moving to the promotion rank
+    /// * mv must be a legal chess move
+    pub unsafe fn move_unchecked_mut(&mut self, mv: ChessMove) {
+        let board = *self;
+        unsafe { board.move_unchecked_into(mv, self) }
+    }
+
+    /// # Safety
+    ///
+    /// * There must be a piece at mv.start
+    /// * No king should be at mv.end
+    /// * The color of mv.start must be self.turn
+    /// * The color of mv.end must be !self.turn or an empty tile
+    /// * mv.promotion must only be set if the moved piece is a pawn and it is moving to the promotion rank
+    /// * mv must be a legal chess move
+    pub unsafe fn move_unchecked_into(&self, mv: ChessMove, output: &mut Self) {
+        *output = *self;
+        output.enpassant_target = None;
+        output.checkers = BitBoard::empty();
+        output.pinned = BitBoard::empty();
+        output.turn = !self.turn;
+
+        let source_bb = BitBoard::from(mv.source);
+        let dest_bb = BitBoard::from(mv.dest);
+        let mv_bb = source_bb ^ dest_bb;
+
+        let piece = unsafe { self.raw.piece_of_unchecked(mv.source) };
+        let captured = self.raw.piece_of(mv.dest);
+
+        output.raw.xor(self.turn, piece, dest_bb);
+        if let Some(captured) = captured {
+            output.raw.xor(!self.turn, captured, dest_bb);
+        }
+
+        output.castle_rights.remove_for_sq(!self.turn, mv.dest);
+        output.castle_rights.remove_for_sq(self.turn, mv.source);
+
+        let opp_king = self.king_sq(!self.turn);
+        let castles = piece == Piece::King && (mv_bb & chess_lookup::CASTLE_MOVES) == mv_bb;
+
+        if piece == Piece::Knight {
+            output.checkers ^= chess_lookup::knight_moves(opp_king) & dest_bb;
+        } else if piece == Piece::Pawn {
+            if let Some(promotion) = mv.promotion {
+                debug_assert_eq!(mv.dest.rank(), chess_lookup::PROMOTION_RANK[self.turn]);
+
+                // Bishop, Rook, and Queen checkers will be handled below
+                if promotion == PromotionPiece::Knight {
+                    output.checkers ^= chess_lookup::knight_moves(opp_king) & dest_bb;
+                }
+
+                output.raw.xor(self.turn, Piece::Pawn, dest_bb);
+                output.raw.xor(self.turn, promotion.to_piece(), dest_bb);
+            } else if mv_bb & chess_lookup::PAWN_DOUBLE_MOVE[self.turn] == mv_bb {
+                output.enpassant_target = Some(mv.dest.file());
+            } else if Some(mv.dest) == self.enpassant_pos() {
+                let ep_file = mv.dest.file();
+
+                // remove pawn by en-passant
+                output.raw.xor(
+                    !self.turn,
+                    Piece::Pawn,
+                    BitBoard::from_pos(Pos::new(ep_file, self.turn.enpassant_pawn_rank())),
+                );
+            }
+
+            if mv.promotion.is_none() {
+                output.checkers ^= chess_lookup::pawn_attacks_moves(opp_king, !self.turn) & dest_bb;
+            }
+        } else if castles {
+            let rook_mv = chess_lookup::BACKRANK_BB[self.turn]
+                & match mv.dest.file().side() {
+                    Side::King => chess_lookup::ROOK_CASTLE_KINGSIDE,
+                    Side::Queen => chess_lookup::ROOK_CASTLE_QUEENSIDE,
+                };
+
+            output.raw.xor(self.turn, Piece::Rook, rook_mv);
+        }
+
+        let pieces = output.raw[self.turn];
+        let bishops = output.raw[Piece::Bishop] | output.raw[Piece::Queen];
+        let rooks = output.raw[Piece::Rook] | output.raw[Piece::Queen];
+
+        let attacking_bishops = bishops & pieces & chess_lookup::bishop_rays(opp_king);
+        let attacking_rooks = rooks & pieces & chess_lookup::rook_rays(opp_king);
+
+        let attackers = attacking_bishops | attacking_rooks;
+
+        for attacker in attackers {
+            let between = chess_lookup::between(opp_king, attacker);
+
+            if between.none() {
+                output.checkers.set(attacker);
+            } else if between.count() == 1 {
+                output.pinned ^= between;
+            }
+        }
     }
 }
 

@@ -11,6 +11,22 @@ pub enum Piece {
     King,
 }
 
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PromotionPiece {
+    Knight = Piece::Knight as u8,
+    Bishop = Piece::Bishop as u8,
+    Rook = Piece::Rook as u8,
+    Queen = Piece::Queen as u8,
+}
+
+impl From<PromotionPiece> for Piece {
+    #[inline]
+    fn from(promotion_piece: PromotionPiece) -> Self {
+        promotion_piece.to_piece()
+    }
+}
+
 impl<T> Index<Piece> for [T; 6] {
     type Output = T;
 
@@ -44,6 +60,18 @@ impl Piece {
     #[inline]
     pub const fn all() -> AllPieceIter {
         AllPieceIter { range: 0..6 }
+    }
+}
+
+impl PromotionPiece {
+    #[inline]
+    pub const fn to_piece(self) -> Piece {
+        match self {
+            PromotionPiece::Knight => Piece::Knight,
+            PromotionPiece::Bishop => Piece::Bishop,
+            PromotionPiece::Rook => Piece::Rook,
+            PromotionPiece::Queen => Piece::Queen,
+        }
     }
 }
 

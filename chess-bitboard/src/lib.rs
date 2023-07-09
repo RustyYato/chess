@@ -10,7 +10,7 @@ mod side;
 use core::num::NonZeroU64;
 
 pub use color::Color;
-pub use piece::Piece;
+pub use piece::{Piece, PromotionPiece};
 pub use pos::{File, Pos, Rank};
 pub use side::Side;
 
