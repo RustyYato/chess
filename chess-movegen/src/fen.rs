@@ -17,6 +17,7 @@ pub enum ParseFenError {
     MissingFullClock,
     TrailingBytes,
     InvalidBoard,
+    InvalidCastleRights,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,18 +103,46 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
 
     if white_king_cr {
         castle_rights.add(Side::King, Color::White);
+
+        if board.get(Pos::H1) != Some((Color::White, Piece::Rook)) {
+            return Err(ParseFenError::InvalidCastleRights);
+        }
     }
 
     if white_queen_cr {
         castle_rights.add(Side::Queen, Color::White);
+
+        if board.get(Pos::A1) != Some((Color::White, Piece::Rook)) {
+            return Err(ParseFenError::InvalidCastleRights);
+        }
     }
 
     if black_king_cr {
         castle_rights.add(Side::King, Color::Black);
+
+        if board.get(Pos::H8) != Some((Color::Black, Piece::Rook)) {
+            return Err(ParseFenError::InvalidCastleRights);
+        }
     }
 
     if black_queen_cr {
         castle_rights.add(Side::Queen, Color::Black);
+
+        if board.get(Pos::A8) != Some((Color::Black, Piece::Rook)) {
+            return Err(ParseFenError::InvalidCastleRights);
+        }
+    }
+
+    if castle_rights.contains_color(Color::White)
+        && board.get(Pos::E1) != Some((Color::White, Piece::King))
+    {
+        return Err(ParseFenError::InvalidCastleRights);
+    }
+
+    if castle_rights.contains_color(Color::Black)
+        && board.get(Pos::E8) != Some((Color::Black, Piece::King))
+    {
+        return Err(ParseFenError::InvalidCastleRights);
     }
 
     if !(white_king_cr || white_queen_cr || black_king_cr || black_queen_cr) {
