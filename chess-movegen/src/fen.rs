@@ -126,16 +126,16 @@ fn parse_fen(mut s: &[u8]) -> crate::Board {
     }
 }
 
-fn parse_number(s: &mut &[u8]) -> Option<u8> {
+fn parse_number(s: &mut &[u8]) -> Option<u16> {
     let mut num = 0;
-    for i in 0..3 {
+    for i in 0..4 {
         match *s {
             [d @ (b'0'..=b'9'), r @ ..] => {
                 if *d == b'0' && i != 0 {
                     panic!("no leading zeros")
                 }
                 num *= 10;
-                num += d - b'0';
+                num += u16::from(d - b'0');
                 *s = r;
             }
             _ => {

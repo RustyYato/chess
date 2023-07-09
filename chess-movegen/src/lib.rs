@@ -13,8 +13,8 @@ pub struct Board {
     checkers: BitBoard,
     castle_rights: castle_rights::CastleRights,
     enpassant_target: Option<chess_bitboard::File>,
-    half_move_clock: u8,
-    full_move_clock: u8,
+    half_move_clock: u16,
+    full_move_clock: u16,
 }
 
 impl core::fmt::Debug for Board {
