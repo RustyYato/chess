@@ -43,7 +43,7 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
 
         let dist = match out {
             Some(Ok((color, piece))) => {
-                board.set(color, piece, pos).unwrap(); // FIXME: remove this panic, it doesn't get elided
+                board.set_unchecked(color, piece, pos);
                 1
             }
             Some(Err(dist)) => dist,
