@@ -2,7 +2,33 @@ use chess_bitboard::{Color, File, Piece, Pos, Rank, Side};
 
 use crate::{castle_rights::CastleRights, raw};
 
-fn parse_fen(mut s: &[u8]) -> crate::Board {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ParseFenError {
+    InvalidPiece(u8, Pos),
+    MissingPiece(Pos),
+    MissingWhitespace(MissingWhitespace),
+    InvalidTurn(u8),
+    MissingTurn,
+    FileOutOfBounds(Rank),
+    InvalidEnpassant { file: u8, rank: u8 },
+    MissingEnpassant,
+    MissingCastleRights,
+    MissingHalfClock,
+    MissingFullClock,
+    TrailingBytes,
+    InvalidBoard,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum MissingWhitespace {
+    Pieces,
+    Turn,
+    CastleRights,
+    Enpassant,
+    HalfMoveClock,
+}
+
+pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
     let mut file = 0;
     let mut ranks = Rank::all().rev();
     let mut rank = ranks.next().unwrap();
@@ -12,12 +38,12 @@ fn parse_fen(mut s: &[u8]) -> crate::Board {
     loop {
         let (out, rest) = parse_piece(s);
         s = rest;
+
+        let pos = Pos::new(File::from_u8(file).unwrap(), rank);
+
         let dist = match out {
             Some(Ok((color, piece))) => {
-                let file = File::from_u8(file).unwrap();
-                let pos = Pos::new(file, rank);
-
-                board.set(color, piece, pos).unwrap();
+                board.set(color, piece, pos).unwrap(); // FIXME: remove this panic, it doesn't get elided
                 1
             }
             Some(Err(dist)) => dist,
@@ -26,7 +52,12 @@ fn parse_fen(mut s: &[u8]) -> crate::Board {
                     s = rest;
                     0
                 }
-                _ => todo!("{}", s[0] as char),
+                [b' ', rest @ ..] => {
+                    s = rest;
+                    continue;
+                }
+                [x, ..] => return Err(ParseFenError::InvalidPiece(*x, pos)),
+                [] => return Err(ParseFenError::MissingPiece(pos)),
             },
         };
 
@@ -44,18 +75,23 @@ fn parse_fen(mut s: &[u8]) -> crate::Board {
                 file = 0;
                 rank = r;
             }
-            9.. => panic!(),
+            9.. => return Err(ParseFenError::FileOutOfBounds(rank)),
         }
     }
 
-    s = parse_whitespace(s).unwrap();
+    if !board.is_valid() {
+        return Err(ParseFenError::InvalidBoard);
+    }
+
+    s = parse_whitespace(s, MissingWhitespace::Pieces)?;
     let (turn, mut s) = match s {
         [b'b', s @ ..] => (Color::Black, s),
         [b'w', s @ ..] => (Color::White, s),
-        _ => unimplemented!(),
+        &[turn, ..] => return Err(ParseFenError::InvalidTurn(turn)),
+        [] => return Err(ParseFenError::MissingTurn),
     };
 
-    s = parse_whitespace(s).unwrap();
+    s = parse_whitespace(s, MissingWhitespace::Turn)?;
 
     let mut castle_rights = CastleRights::empty();
 
@@ -81,31 +117,56 @@ fn parse_fen(mut s: &[u8]) -> crate::Board {
     }
 
     if !(white_king_cr || white_queen_cr || black_king_cr || black_queen_cr) {
-        s = parse_dash(s).unwrap();
+        s = parse_dash(s).ok_or(ParseFenError::MissingCastleRights)?;
     }
 
-    s = parse_whitespace(s).unwrap();
+    s = parse_whitespace(s, MissingWhitespace::CastleRights)?;
 
     let (enpassant_target, mut s) = match s {
-        [file @ (b'a'..=b'h'), rank @ (b'2' | b'6'), s @ ..] => {
+        &[file @ (b'a'..=b'h'), rank @ (b'3' | b'6'), ref s @ ..] => {
             let expected_rank = match turn {
-                Color::White => 6,
-                Color::Black => 2,
+                Color::White => b'6',
+                Color::Black => b'3',
             };
 
-            assert_eq!(*rank, expected_rank);
+            if rank != expected_rank {
+                return Err(ParseFenError::InvalidEnpassant { file, rank });
+            }
 
-            (Some(File::from_u8(*file - b'a').unwrap()), s)
+            let file_pos = File::from_u8(file - b'a').unwrap();
+
+            if board
+                .get(Pos::new(file_pos, turn.enpassant_capture_rank()))
+                .is_some()
+            {
+                return Err(ParseFenError::InvalidEnpassant { file, rank });
+            }
+
+            if let Some((color, piece)) = board.get(Pos::new(file_pos, turn.enpassant_pawn_rank()))
+            {
+                if color == turn {
+                    return Err(ParseFenError::InvalidEnpassant { file, rank });
+                }
+
+                if piece != Piece::Pawn {
+                    return Err(ParseFenError::InvalidEnpassant { file, rank });
+                }
+            } else {
+                return Err(ParseFenError::InvalidEnpassant { file, rank });
+            }
+
+            (Some(file_pos), s)
         }
         [b'-', s @ ..] => (None, s),
-        _ => todo!(),
+        &[file, rank, ..] => return Err(ParseFenError::InvalidEnpassant { file, rank }),
+        [_] | [] => return Err(ParseFenError::MissingEnpassant),
     };
 
-    s = parse_whitespace(s).unwrap();
+    s = parse_whitespace(s, MissingWhitespace::Enpassant)?;
 
-    let half_move_clock = parse_number(&mut s).unwrap();
-    s = parse_whitespace(s).unwrap();
-    let full_move_clock = parse_number(&mut s).unwrap();
+    let half_move_clock = parse_number(&mut s).ok_or(ParseFenError::MissingHalfClock)?;
+    s = parse_whitespace(s, MissingWhitespace::HalfMoveClock)?;
+    let full_move_clock = parse_number(&mut s).ok_or(ParseFenError::MissingFullClock)?;
 
     let mut board = crate::Board {
         raw: board,
@@ -120,20 +181,18 @@ fn parse_fen(mut s: &[u8]) -> crate::Board {
 
     if s.is_empty() {
         board.update_pin_info();
-        board
+        Ok(board)
     } else {
-        panic!("Invalid FEN string, too much input")
+        Err(ParseFenError::TrailingBytes)
     }
 }
 
+#[inline]
 fn parse_number(s: &mut &[u8]) -> Option<u16> {
     let mut num = 0;
     for i in 0..4 {
         match *s {
             [d @ (b'0'..=b'9'), r @ ..] => {
-                if *d == b'0' && i != 0 {
-                    panic!("no leading zeros")
-                }
                 num *= 10;
                 num += u16::from(d - b'0');
                 *s = r;
@@ -149,33 +208,38 @@ fn parse_number(s: &mut &[u8]) -> Option<u16> {
     Some(num)
 }
 
-fn parse_whitespace(mut s: &[u8]) -> Option<&[u8]> {
+#[inline]
+fn parse_whitespace(mut s: &[u8], err: MissingWhitespace) -> Result<&[u8], ParseFenError> {
     let mut has_whitespace = false;
     while let [b' ', r @ ..] = s {
         s = r;
         has_whitespace = true;
     }
     if has_whitespace {
-        Some(s)
+        Ok(s)
     } else {
-        None
+        Err(ParseFenError::MissingWhitespace(err))
     }
 }
 
-fn parse_dash(mut s: &[u8]) -> Option<&[u8]> {
+#[inline]
+fn parse_dash(s: &[u8]) -> Option<&[u8]> {
     match s {
         [b'-', s @ ..] => Some(s),
         _ => None,
     }
 }
 
-fn parse_castle_rights(mut s: &[u8], b: u8) -> (bool, &[u8]) {
+#[inline]
+fn parse_castle_rights(s: &[u8], b: u8) -> (bool, &[u8]) {
     match s {
         [x, s @ ..] if *x == b => (true, s),
         _ => (false, s),
     }
 }
 
+#[inline]
+#[allow(clippy::type_complexity)]
 fn parse_piece(s: &[u8]) -> (Option<Result<(Color, Piece), u8>>, &[u8]) {
     match s {
         [b'p', rest @ ..] => (Some(Ok((Color::Black, Piece::Pawn))), rest),
@@ -199,9 +263,8 @@ fn parse_piece(s: &[u8]) -> (Option<Result<(Color, Piece), u8>>, &[u8]) {
 
 #[test]
 fn test() {
-    let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0";
-
-    let board = parse_fen(fen.as_bytes());
+    let board =
+        "rnbqkbnr/1ppppppp/8/p7/8/8/PPPPPPPP/RNBQKBNR w KQkq a6 1 0".parse::<crate::Board>();
 
     eprintln!("{board:?}");
     panic!()

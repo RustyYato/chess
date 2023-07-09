@@ -188,6 +188,14 @@ impl RawBoard {
         self.colors[color] -= BitBoard::from_pos(pos);
         self.pieces[piece] -= BitBoard::from_pos(pos);
     }
+
+    pub(crate) fn is_valid(&self) -> bool {
+        let kings = self[Piece::King];
+        let white = self[Color::White];
+        let black = self[Color::Black];
+
+        kings.count() == 2 && (kings & white).count() == 1 && (kings & black).count() == 1
+    }
 }
 
 impl Index<Color> for RawBoard {

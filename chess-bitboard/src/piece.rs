@@ -41,6 +41,7 @@ impl Piece {
         })
     }
 
+    #[inline]
     pub const fn all() -> AllPieceIter {
         AllPieceIter { range: 0..6 }
     }

@@ -4,6 +4,8 @@ mod castle_rights;
 pub mod fen;
 pub mod raw;
 
+use std::str::FromStr;
+
 use chess_bitboard::{BitBoard, Color, Piece};
 
 pub struct Board {
@@ -38,11 +40,25 @@ impl core::fmt::Debug for Board {
     }
 }
 
+impl FromStr for Board {
+    type Err = fen::ParseFenError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        fen::parse_fen(s.as_bytes())
+    }
+}
+
 pub struct BoardBuilder {
     board: Board,
 }
 
 impl Board {
+    pub fn standard() -> Self {
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
+            .parse()
+            .unwrap()
+    }
+
     #[inline]
     pub fn king_sq(&self, color: Color) -> chess_bitboard::Pos {
         let mut king_board = self.raw[color] & self.raw[Piece::King];

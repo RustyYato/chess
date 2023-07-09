@@ -1,5 +1,7 @@
 use core::ops::{Index, IndexMut, Not, Range};
 
+use crate::Rank;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Color {
     White,
@@ -44,8 +46,25 @@ impl Color {
         })
     }
 
+    #[inline]
     pub const fn all() -> AllColorIter {
         AllColorIter { range: 0..2 }
+    }
+
+    #[inline]
+    pub const fn enpassant_capture_rank(self) -> Rank {
+        match self {
+            Color::White => Rank::_6,
+            Color::Black => Rank::_3,
+        }
+    }
+
+    #[inline]
+    pub const fn enpassant_pawn_rank(self) -> Rank {
+        match self {
+            Color::White => Rank::_5,
+            Color::Black => Rank::_4,
+        }
     }
 }
 
