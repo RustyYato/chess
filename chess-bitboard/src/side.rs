@@ -1,70 +1,70 @@
 use core::ops::{Index, IndexMut, Not, Range};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Color {
-    White,
-    Black,
+pub enum Side {
+    King,
+    Queen,
 }
 
-impl<T> Index<Color> for [T; 2] {
+impl<T> Index<Side> for [T; 2] {
     type Output = T;
 
     #[inline]
-    fn index(&self, index: Color) -> &Self::Output {
+    fn index(&self, index: Side) -> &Self::Output {
         &self[index as usize]
     }
 }
 
-impl<T> IndexMut<Color> for [T; 2] {
+impl<T> IndexMut<Side> for [T; 2] {
     #[inline]
-    fn index_mut(&mut self, index: Color) -> &mut Self::Output {
+    fn index_mut(&mut self, index: Side) -> &mut Self::Output {
         &mut self[index as usize]
     }
 }
 
-impl Not for Color {
+impl Not for Side {
     type Output = Self;
 
     #[inline]
     fn not(self) -> Self::Output {
         match self {
-            Color::White => Color::Black,
-            Color::Black => Color::White,
+            Side::King => Side::Queen,
+            Side::Queen => Side::King,
         }
     }
 }
 
-impl Color {
+impl Side {
     #[inline]
     pub fn from_u8(index: u8) -> Option<Self> {
         Some(match index {
-            0 => Self::White,
-            1 => Self::Black,
+            0 => Self::King,
+            1 => Self::Queen,
             2.. => return None,
         })
     }
 
-    pub const fn all() -> AllColorIter {
-        AllColorIter { range: 0..2 }
+    pub const fn all() -> AllSideIter {
+        AllSideIter { range: 0..2 }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct AllColorIter {
+pub struct AllSideIter {
     range: Range<u8>,
 }
 
-impl Iterator for AllColorIter {
-    type Item = Color;
+impl Iterator for AllSideIter {
+    type Item = Side;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        Some(Color::from_u8(self.range.next()?).unwrap())
+        Some(Side::from_u8(self.range.next()?).unwrap())
     }
 
     #[inline]
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        Some(Color::from_u8(self.range.nth(n)?).unwrap())
+        Some(Side::from_u8(self.range.nth(n)?).unwrap())
     }
 
     #[inline]
@@ -73,14 +73,14 @@ impl Iterator for AllColorIter {
     }
 }
 
-impl DoubleEndedIterator for AllColorIter {
+impl DoubleEndedIterator for AllSideIter {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        Some(Color::from_u8(self.range.next_back()?).unwrap())
+        Some(Side::from_u8(self.range.next_back()?).unwrap())
     }
 
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        Some(Color::from_u8(self.range.nth_back(n)?).unwrap())
+        Some(Side::from_u8(self.range.nth_back(n)?).unwrap())
     }
 }

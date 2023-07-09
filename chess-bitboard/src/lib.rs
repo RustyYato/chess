@@ -5,12 +5,14 @@ mod fmt;
 mod ops;
 mod piece;
 mod pos;
+mod side;
 
 use core::num::NonZeroU64;
 
 pub use color::Color;
 pub use piece::Piece;
 pub use pos::{File, Pos, Rank};
+pub use side::Side;
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]

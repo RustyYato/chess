@@ -1,8 +1,8 @@
-use chess_bitboard::{Color, File, Piece, Pos, Rank};
+use chess_bitboard::{Color, File, Piece, Pos, Rank, Side};
 
-use crate::raw;
+use crate::{castle_rights::CastleRights, raw};
 
-fn parse_fen(mut s: &[u8]) {
+fn parse_fen(mut s: &[u8]) -> crate::Board {
     let mut file = 0;
     let mut ranks = Rank::all().rev();
     let mut rank = ranks.next().unwrap();
@@ -57,10 +57,28 @@ fn parse_fen(mut s: &[u8]) {
 
     s = parse_whitespace(s).unwrap();
 
+    let mut castle_rights = CastleRights::empty();
+
     let (white_king_cr, s) = parse_castle_rights(s, b'K');
     let (white_queen_cr, s) = parse_castle_rights(s, b'Q');
     let (black_king_cr, s) = parse_castle_rights(s, b'k');
     let (black_queen_cr, mut s) = parse_castle_rights(s, b'q');
+
+    if white_king_cr {
+        castle_rights.add(Side::King, Color::White);
+    }
+
+    if white_queen_cr {
+        castle_rights.add(Side::Queen, Color::White);
+    }
+
+    if black_king_cr {
+        castle_rights.add(Side::King, Color::Black);
+    }
+
+    if black_queen_cr {
+        castle_rights.add(Side::Queen, Color::Black);
+    }
 
     if !(white_king_cr || white_queen_cr || black_king_cr || black_queen_cr) {
         s = parse_dash(s).unwrap();
@@ -77,7 +95,7 @@ fn parse_fen(mut s: &[u8]) {
 
             assert_eq!(*rank, expected_rank);
 
-            (Some(File::from_u8(*file - b'a')), s)
+            (Some(File::from_u8(*file - b'a').unwrap()), s)
         }
         [b'-', s @ ..] => (None, s),
         _ => todo!(),
@@ -85,21 +103,24 @@ fn parse_fen(mut s: &[u8]) {
 
     s = parse_whitespace(s).unwrap();
 
-    let mut halfmove_clock = 0;
-
     let half_move_clock = parse_number(&mut s).unwrap();
     s = parse_whitespace(s).unwrap();
-    let mut full_moves = parse_number(&mut s).unwrap();
+    let full_move_clock = parse_number(&mut s).unwrap();
 
-    let board = crate::Board {
+    let mut board = crate::Board {
         raw: board,
         turn,
         pinned: chess_bitboard::BitBoard::empty(),
         checkers: chess_bitboard::BitBoard::empty(),
+        castle_rights,
+        enpassant_target,
+        half_move_clock,
+        full_move_clock,
     };
 
     if s.is_empty() {
-        todo!()
+        board.update_pin_info();
+        board
     } else {
         panic!("Invalid FEN string, too much input")
     }
@@ -178,7 +199,10 @@ fn parse_piece(s: &[u8]) -> (Option<Result<(Color, Piece), u8>>, &[u8]) {
 
 #[test]
 fn test() {
-    let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 0";
+    let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0";
 
-    parse_fen(fen.as_bytes());
+    let board = parse_fen(fen.as_bytes());
+
+    eprintln!("{board:?}");
+    panic!()
 }

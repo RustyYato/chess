@@ -1,5 +1,6 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
+mod castle_rights;
 pub mod fen;
 pub mod raw;
 
@@ -10,6 +11,31 @@ pub struct Board {
     turn: Color,
     pinned: BitBoard,
     checkers: BitBoard,
+    castle_rights: castle_rights::CastleRights,
+    enpassant_target: Option<chess_bitboard::File>,
+    half_move_clock: u8,
+    full_move_clock: u8,
+}
+
+impl core::fmt::Debug for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("turn: ")?;
+        self.turn.fmt(f)?;
+        f.write_str("\nhalf moves: ")?;
+        self.half_move_clock.fmt(f)?;
+        f.write_str("\nfull moves: ")?;
+        self.full_move_clock.fmt(f)?;
+        if let Some(ep) = self.enpassant_target {
+            f.write_str("\nen-passant: ")?;
+            ep.fmt(f)?;
+        }
+        f.write_str("\ncastle rights: ")?;
+        self.castle_rights.fmt(f)?;
+        f.write_str("\nboard:\n")?;
+        self.raw.fmt(f)?;
+
+        Ok(())
+    }
 }
 
 pub struct BoardBuilder {
