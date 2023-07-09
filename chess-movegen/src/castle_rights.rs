@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use chess_bitboard::{Color, Side};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct CastleRights(u8);
 
 impl core::fmt::Debug for CastleRights {
@@ -69,5 +69,10 @@ impl CastleRights {
     #[inline]
     pub const fn contains(self, side: Side, color: Color) -> bool {
         self.0 & (1 << offset(side, color)) != 0
+    }
+
+    #[inline]
+    pub const fn contains_color(self, color: Color) -> bool {
+        self.0 & ((1 << offset(Side::King, color)) | (1 << offset(Side::Queen, color))) != 0
     }
 }

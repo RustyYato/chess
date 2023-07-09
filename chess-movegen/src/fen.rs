@@ -16,8 +16,7 @@ pub enum ParseFenError {
     MissingHalfClock,
     MissingFullClock,
     TrailingBytes,
-    InvalidBoard,
-    InvalidCastleRights,
+    BoardValidation(crate::BoardValidationError),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -80,10 +79,6 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
         }
     }
 
-    if !board.is_valid() {
-        return Err(ParseFenError::InvalidBoard);
-    }
-
     s = parse_whitespace(s, MissingWhitespace::Pieces)?;
     let (turn, mut s) = match s {
         [b'b', s @ ..] => (Color::Black, s),
@@ -103,46 +98,18 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
 
     if white_king_cr {
         castle_rights.add(Side::King, Color::White);
-
-        if board.get(Pos::H1) != Some((Color::White, Piece::Rook)) {
-            return Err(ParseFenError::InvalidCastleRights);
-        }
     }
 
     if white_queen_cr {
         castle_rights.add(Side::Queen, Color::White);
-
-        if board.get(Pos::A1) != Some((Color::White, Piece::Rook)) {
-            return Err(ParseFenError::InvalidCastleRights);
-        }
     }
 
     if black_king_cr {
         castle_rights.add(Side::King, Color::Black);
-
-        if board.get(Pos::H8) != Some((Color::Black, Piece::Rook)) {
-            return Err(ParseFenError::InvalidCastleRights);
-        }
     }
 
     if black_queen_cr {
         castle_rights.add(Side::Queen, Color::Black);
-
-        if board.get(Pos::A8) != Some((Color::Black, Piece::Rook)) {
-            return Err(ParseFenError::InvalidCastleRights);
-        }
-    }
-
-    if castle_rights.contains_color(Color::White)
-        && board.get(Pos::E1) != Some((Color::White, Piece::King))
-    {
-        return Err(ParseFenError::InvalidCastleRights);
-    }
-
-    if castle_rights.contains_color(Color::Black)
-        && board.get(Pos::E8) != Some((Color::Black, Piece::King))
-    {
-        return Err(ParseFenError::InvalidCastleRights);
     }
 
     if !(white_king_cr || white_queen_cr || black_king_cr || black_queen_cr) {
@@ -162,29 +129,7 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
                 return Err(ParseFenError::InvalidEnpassant { file, rank });
             }
 
-            let file_pos = File::from_u8(file - b'a').unwrap();
-
-            if board
-                .get(Pos::new(file_pos, turn.enpassant_capture_rank()))
-                .is_some()
-            {
-                return Err(ParseFenError::InvalidEnpassant { file, rank });
-            }
-
-            if let Some((color, piece)) = board.get(Pos::new(file_pos, turn.enpassant_pawn_rank()))
-            {
-                if color == turn {
-                    return Err(ParseFenError::InvalidEnpassant { file, rank });
-                }
-
-                if piece != Piece::Pawn {
-                    return Err(ParseFenError::InvalidEnpassant { file, rank });
-                }
-            } else {
-                return Err(ParseFenError::InvalidEnpassant { file, rank });
-            }
-
-            (Some(file_pos), s)
+            (Some(File::from_u8(file - b'a').unwrap()), s)
         }
         [b'-', s @ ..] => (None, s),
         &[file, rank, ..] => return Err(ParseFenError::InvalidEnpassant { file, rank }),
@@ -207,6 +152,10 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
         half_move_clock,
         full_move_clock,
     };
+
+    if let Err(err) = board.validate() {
+        return Err(ParseFenError::BoardValidation(err));
+    }
 
     if s.is_empty() {
         board.update_pin_info();

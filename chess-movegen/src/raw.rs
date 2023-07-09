@@ -2,6 +2,7 @@ use std::ops::Index;
 
 use chess_bitboard::{BitBoard, Color, Piece, Pos};
 
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct RawBoard {
     colors: [BitBoard; 2],
     pieces: [BitBoard; 6],
@@ -127,6 +128,23 @@ impl RawBoard {
         }
     }
 
+    pub const fn standard() -> Self {
+        Self {
+            colors: [
+                BitBoard::from_u64(0x0303030303030303),
+                BitBoard::from_u64(0xc0c0c0c0c0c0c0c0),
+            ],
+            pieces: [
+                BitBoard::from_u64(0x4242424242424242),
+                BitBoard::from_u64(0x0081000000008100),
+                BitBoard::from_u64(0x0000810000810000),
+                BitBoard::from_u64(0x8100000000000081),
+                BitBoard::from_u64(0x0000000081000000),
+                BitBoard::from_u64(0x0000008100000000),
+            ],
+        }
+    }
+
     #[inline]
     pub fn all(&self) -> BitBoard {
         self.colors[Color::White] | self.colors[Color::Black]
@@ -167,7 +185,23 @@ impl RawBoard {
 
     #[inline]
     pub unsafe fn piece_of_unchecked(&self, pos: Pos) -> Piece {
-        unsafe { self.piece_of(pos).unwrap_unchecked() }
+        let pieces = self[Piece::Pawn] | self[Piece::Knight] | self[Piece::Bishop];
+
+        if pieces.contains(pos) {
+            if self[Piece::Pawn].contains(pos) {
+                Piece::Pawn
+            } else if self[Piece::Knight].contains(pos) {
+                Piece::Knight
+            } else {
+                Piece::Bishop
+            }
+        } else if self[Piece::Rook].contains(pos) {
+            Piece::Rook
+        } else if self[Piece::Queen].contains(pos) {
+            Piece::Queen
+        } else {
+            Piece::King
+        }
     }
 
     #[inline]
@@ -189,7 +223,7 @@ impl RawBoard {
         self.pieces[piece] -= BitBoard::from_pos(pos);
     }
 
-    pub(crate) fn is_valid(&self) -> bool {
+    pub(crate) fn has_kings(&self) -> bool {
         let kings = self[Piece::King];
         let white = self[Color::White];
         let black = self[Color::Black];
