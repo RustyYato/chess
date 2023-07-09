@@ -1,6 +1,6 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
-use chess_bitboard::{BitBoard, Color, File, Pos, Rank};
+use chess_bitboard::{BitBoard, Color, File, Piece, Pos, Rank};
 
 mod between;
 mod bishop_moves;
@@ -9,6 +9,7 @@ mod knight_moves;
 mod pawn_attacks;
 mod rook_moves;
 mod rook_rays;
+mod zobrist;
 
 struct Magic {
     mask: u64,
@@ -68,6 +69,11 @@ pub fn rook_moves(pos: Pos, all_pieces: BitBoard) -> BitBoard {
 #[inline]
 pub fn between(a: Pos, b: Pos) -> BitBoard {
     BitBoard::from(between::SOLUTIONS[a as usize][b as usize])
+}
+
+#[inline]
+pub fn zobrist(pos: Pos, piece: Piece, color: Color) -> u64 {
+    zobrist::ZOBRIST[color][pos][piece]
 }
 
 pub const PAWN_DOUBLE_SOURCE: BitBoard =

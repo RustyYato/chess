@@ -1,6 +1,6 @@
 use std::{error::Error, fs::File, io::BufWriter, io::Write, path::Path};
 
-use chess_bitboard::Pos;
+use chess_bitboard::{Color, Piece, Pos};
 use chess_lookup_generator::MagicTable;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -25,7 +25,30 @@ fn main() -> Result<(), Box<dyn Error>> {
     write_between(target_dir)?;
     write_bishop_moves(target_dir)?;
     write_rook_moves(target_dir)?;
+    write_zobrist(target_dir)?;
 
+    Ok(())
+}
+
+fn write_zobrist(target_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let mut zobrist = BufWriter::new(File::create(target_dir.join("zobrist.rs"))?);
+
+    writeln!(
+        zobrist,
+        "pub(super) static ZOBRIST: [[[u64; 6]; 64]; 2] = ["
+    )?;
+    for _ in Color::all() {
+        write!(zobrist, "[")?;
+        for _ in Pos::all() {
+            write!(zobrist, "[")?;
+            for _ in Piece::all() {
+                write!(zobrist, "0x{:x},", rand::random::<u64>())?
+            }
+            write!(zobrist, "],")?
+        }
+        write!(zobrist, "],")?
+    }
+    writeln!(zobrist, "];")?;
     Ok(())
 }
 
