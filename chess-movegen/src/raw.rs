@@ -1,4 +1,4 @@
-use std::ops::{BitXor, BitXorAssign, Index};
+use std::ops::Index;
 
 use chess_bitboard::{BitBoard, Color, Piece, Pos};
 
