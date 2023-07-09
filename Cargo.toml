@@ -6,7 +6,8 @@ members = [
     'chess-bitboard',
     'chess-lookup',
     'chess-lookup-generator',
-    'chess-movegen'
+    'chess-movegen',
+    'chess-cli',
 ]
 
 [workspace.dependencies.chess]

@@ -1,8 +1,8 @@
 use chess_bitboard::Pos::*;
 use chess_movegen::{Board, ChessMove};
 
-// const COUNT: u32 = 1_000_000;
-const COUNT: u32 = 100_000_000;
+const COUNT: u32 = 1_000_000;
+// const COUNT: u32 = 100_000_000;
 
 fn main() {
     // [Event "Titled Tuesday Blitz January 03 Early 2023"]
