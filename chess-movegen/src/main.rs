@@ -1,16 +1,32 @@
-use chess_movegen::Board;
+use chess_bitboard::Pos;
+use chess_movegen::{Board, ChessMove};
 
 fn main() {
-    let board = Board::standard();
+    let mut board = Board::standard();
 
-    eprintln!("{:x}", board.raw());
+    eprintln!("{board:?}");
 
-    let start = std::time::Instant::now();
-    for _ in 0..10_000_000 {
-        Board::standard();
-        // "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
-        //     .parse::<Board>()
-        //     .unwrap();
+    let mvs = [
+        ChessMove {
+            source: Pos::E2,
+            dest: Pos::E4,
+            promotion: None,
+        },
+        ChessMove {
+            source: Pos::E7,
+            dest: Pos::E5,
+            promotion: None,
+        },
+        ChessMove {
+            source: Pos::D1,
+            dest: Pos::H5,
+            promotion: None,
+        },
+    ];
+
+    for mv in mvs {
+        unsafe { board.move_unchecked_mut(mv) }
+        eprintln!("{mv:?}");
+        eprintln!("{board:?}");
     }
-    dbg!(start.elapsed() / 10_000_000);
 }

@@ -19,6 +19,7 @@ pub struct Board {
     raw: raw::RawBoard,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ChessMove {
     pub source: Pos,
     pub dest: Pos,
@@ -40,7 +41,46 @@ impl core::fmt::Debug for Board {
         f.write_str("\ncastle rights: ")?;
         self.castle_rights.fmt(f)?;
         f.write_str("\nboard:\n")?;
-        self.raw.fmt(f)?;
+        if f.alternate() {
+            self.raw.fmt(f)?;
+        } else {
+            static PIECES: [[char; 6]; 2] = [
+                ['P', 'N', 'B', 'R', 'Q', 'K'],
+                ['p', 'n', 'b', 'r', 'q', 'k'],
+            ];
+            write!(f, " ")?;
+            for file in chess_bitboard::File::all() {
+                write!(f, " {file:?}")?;
+            }
+            writeln!(f)?;
+            for rank in chess_bitboard::Rank::all().rev() {
+                write!(f, "{}", rank as u8 + 1)?;
+
+                for file in chess_bitboard::File::all() {
+                    let pos = chess_bitboard::Pos::new(file, rank);
+
+                    f.write_str(if self.pinned.contains(pos) {
+                        "#"
+                    } else if self.checkers.contains(pos) {
+                        "*"
+                    } else {
+                        " "
+                    })?;
+
+                    match self.raw.get(pos) {
+                        Some((color, piece)) => {
+                            let piece = PIECES[color][piece];
+                            write!(f, "{piece}")?;
+                        }
+                        None => {
+                            write!(f, ".")?;
+                        }
+                    }
+                }
+
+                writeln!(f)?;
+            }
+        }
 
         Ok(())
     }
@@ -261,8 +301,10 @@ impl Board {
 
         let pinners = opp_bb & (bishop_pinners | rook_pinners);
 
+        let pieces = self.raw.all();
+
         for pos in pinners {
-            let between = chess_lookup::between(king_pos, pos);
+            let between = pieces & chess_lookup::between(king_pos, pos);
 
             if between.none() {
                 self.checkers.set(pos);
@@ -336,7 +378,7 @@ impl Board {
         let piece = unsafe { self.raw.piece_of_unchecked(mv.source) };
         let captured = self.raw.piece_of(mv.dest);
 
-        output.raw.xor(self.turn, piece, dest_bb);
+        output.raw.xor(self.turn, piece, mv_bb);
         if let Some(captured) = captured {
             output.raw.xor(!self.turn, captured, dest_bb);
         }
@@ -395,8 +437,10 @@ impl Board {
 
         let attackers = attacking_bishops | attacking_rooks;
 
+        let opp_pieces = output.raw.all();
+
         for attacker in attackers {
-            let between = chess_lookup::between(opp_king, attacker);
+            let between = opp_pieces & chess_lookup::between(opp_king, attacker);
 
             if between.none() {
                 output.checkers.set(attacker);

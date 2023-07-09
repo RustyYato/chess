@@ -200,6 +200,10 @@ impl RawBoard {
         } else if self[Piece::Queen].contains(pos) {
             Piece::Queen
         } else {
+            debug_assert!(
+                self[Piece::King].contains(pos),
+                "Tried to get piece at {pos:?} where there is no piece, this is UB"
+            );
             Piece::King
         }
     }
