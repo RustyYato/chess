@@ -187,7 +187,7 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
     }
 }
 
-#[inline]
+#[inline(always)]
 fn parse_number(s: &mut &[u8]) -> Option<u16> {
     let mut num = 0;
     for i in 0..4 {
