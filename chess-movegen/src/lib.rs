@@ -1,5 +1,6 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
 
+pub mod fen;
 pub mod raw;
 
 use chess_bitboard::{BitBoard, Color, Piece};

@@ -7,6 +7,116 @@ pub struct RawBoard {
     pieces: [BitBoard; 6],
 }
 
+impl core::fmt::Debug for RawBoard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if f.alternate() {
+            f.write_str("Color: White\n")?;
+            self[Color::White].fmt(f)?;
+
+            f.write_str("Color: Black\n")?;
+            self[Color::Black].fmt(f)?;
+
+            f.write_str("Piece: Pawn\n")?;
+            self[Piece::Pawn].fmt(f)?;
+
+            f.write_str("Piece: Knight\n")?;
+            self[Piece::Knight].fmt(f)?;
+
+            f.write_str("Piece: Bishop\n")?;
+            self[Piece::Bishop].fmt(f)?;
+
+            f.write_str("Piece: Rook\n")?;
+            self[Piece::Rook].fmt(f)?;
+
+            f.write_str("Piece: Queen\n")?;
+            self[Piece::Queen].fmt(f)?;
+
+            f.write_str("Piece: King\n")?;
+            self[Piece::King].fmt(f)?;
+        } else {
+            static PIECES: [[char; 6]; 2] = [
+                ['P', 'N', 'B', 'R', 'Q', 'K'],
+                ['p', 'n', 'b', 'r', 'q', 'k'],
+            ];
+            write!(f, " ")?;
+            for file in chess_bitboard::File::all() {
+                write!(f, " {file:?}")?;
+            }
+            writeln!(f)?;
+            for rank in chess_bitboard::Rank::all().rev() {
+                write!(f, "{}", rank as u8 + 1)?;
+
+                for file in chess_bitboard::File::all() {
+                    let pos = chess_bitboard::Pos::new(file, rank);
+
+                    match self.get(pos) {
+                        Some((color, piece)) => {
+                            let piece = PIECES[color][piece];
+                            write!(f, " {piece}")?;
+                        }
+                        None => {
+                            write!(f, " .")?;
+                        }
+                    }
+                }
+
+                writeln!(f)?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl core::fmt::Binary for RawBoard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut f = f.debug_list();
+
+        for i in self.colors {
+            f.entry(&format_args!("{i:b}"));
+        }
+
+        for i in self.pieces {
+            f.entry(&format_args!("{i:b}"));
+        }
+
+        f.finish()
+    }
+}
+
+impl core::fmt::LowerHex for RawBoard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut f = f.debug_list();
+
+        for i in self.colors {
+            f.entry(&format_args!("{i:x}"));
+        }
+
+        for i in self.pieces {
+            f.entry(&format_args!("{i:x}"));
+        }
+
+        f.finish()
+    }
+}
+
+impl core::fmt::UpperHex for RawBoard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut f = f.debug_list();
+
+        for i in self.colors {
+            f.entry(&format_args!("{i:X}"));
+        }
+
+        for i in self.pieces {
+            f.entry(&format_args!("{i:X}"));
+        }
+
+        f.finish()
+    }
+}
+
+#[derive(Debug)]
 pub struct PieceAlreadyExists;
 
 impl RawBoard {
