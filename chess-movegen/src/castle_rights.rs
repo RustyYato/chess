@@ -81,6 +81,10 @@ impl core::fmt::Debug for CastleRights {
             f.write_char(right)?
         }
 
+        if self.0 == 0 {
+            f.write_str("-")?
+        }
+
         Ok(())
     }
 }

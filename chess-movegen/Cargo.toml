@@ -10,3 +10,6 @@ path = '../chess-bitboard'
 
 [dependencies.chess-lookup]
 path = '../chess-lookup'
+
+[dependencies.chess]
+workspace = true

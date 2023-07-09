@@ -4,9 +4,12 @@ mod castle_rights;
 pub mod fen;
 pub mod raw;
 
-use std::str::FromStr;
+use std::{
+    fmt::{Debug, Write},
+    str::FromStr,
+};
 
-use chess_bitboard::{BitBoard, Color, File, Piece, Pos, PromotionPiece, Side};
+use chess_bitboard::{BitBoard, Color, File, Piece, Pos, PromotionPiece, Rank, Side};
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Board {
     turn: Color,
@@ -24,6 +27,64 @@ pub struct ChessMove {
     pub source: Pos,
     pub dest: Pos,
     pub promotion: Option<PromotionPiece>,
+}
+
+impl core::fmt::Display for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        static PIECES: [[char; 6]; 2] = [
+            ['P', 'N', 'B', 'R', 'Q', 'K'],
+            ['p', 'n', 'b', 'r', 'q', 'k'],
+        ];
+
+        let mut missing: u32 = 0;
+
+        for file in Rank::all().rev() {
+            for pos in file {
+                match self.raw.get(pos) {
+                    Some((color, piece)) => {
+                        if missing != 0 {
+                            core::fmt::Display::fmt(&missing, f)?;
+                            missing = 0;
+                        }
+                        f.write_char(PIECES[color][piece])?;
+                    }
+                    None => {
+                        missing += 1;
+                    }
+                }
+            }
+
+            if missing != 0 {
+                core::fmt::Display::fmt(&missing, f)?;
+                missing = 0;
+            }
+            if file != Rank::_1 {
+                f.write_str("/")?
+            }
+        }
+
+        f.write_str(match self.turn {
+            Color::White => " w ",
+            Color::Black => " b ",
+        })?;
+
+        self.castle_rights.fmt(f)?;
+
+        match self.enpassant_target {
+            Some(file) => {
+                let rank = self.turn.enpassant_pawn_rank();
+
+                let file = (file as u8 + b'a') as char;
+                f.write_str(" ")?;
+                f.write_char(file)?;
+                core::fmt::Display::fmt(&(rank as u8), f)?;
+                f.write_str(" ")?;
+            }
+            None => f.write_str(" - ")?,
+        }
+
+        write!(f, "{} {}", self.half_move_clock, self.full_move_clock)
+    }
 }
 
 impl core::fmt::Debug for Board {

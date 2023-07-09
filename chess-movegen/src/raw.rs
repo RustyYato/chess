@@ -180,7 +180,9 @@ impl RawBoard {
 
     #[inline]
     pub fn piece_of(&self, pos: Pos) -> Option<Piece> {
-        Piece::all().find(|&piece| self.pieces[piece].contains(pos))
+        self.color_of(pos)?;
+        Some(unsafe { self.piece_of_unchecked(pos) })
+        // Piece::all().find(|&piece| self.pieces[piece].contains(pos))
     }
 
     #[inline]

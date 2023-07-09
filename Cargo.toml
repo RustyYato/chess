@@ -8,3 +8,9 @@ members = [
     'chess-lookup-generator',
     'chess-movegen'
 ]
+
+[workspace.dependencies.chess]
+version = '3'
+
+[profile.release]
+debug = true
