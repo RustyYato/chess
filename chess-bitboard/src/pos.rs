@@ -183,16 +183,23 @@ pub struct AllFileIter {
     range: Range<u8>
 }
 
+impl  AllFileIter {
+    fn next_with(&mut self, f: impl FnOnce(&mut Range<u8>) -> Option<u8>) -> Option<File> {
+        let rank = File::from_u8(f(&mut self.range)?);
+        Some(unsafe{ rank.unwrap_unchecked() })
+    }
+}
+
 impl Iterator for AllFileIter {
     type Item = File;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        Some(File::from_u8(self.range.next()?).unwrap())
+        self.next_with(Iterator::next)
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        Some(File::from_u8(self.range.nth(n)?).unwrap())
+        self.next_with(|range| range.nth(n))
     }
 
     #[inline]
@@ -204,11 +211,11 @@ impl Iterator for AllFileIter {
 impl DoubleEndedIterator for AllFileIter {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        Some(File::from_u8(self.range.next_back()?).unwrap())
+        self.next_with(DoubleEndedIterator::next_back)
     }
 
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        Some(File::from_u8(self.range.nth_back(n)?).unwrap())
+        self.next_with(|range| range.nth_back(n))
     }
 }
 
@@ -217,16 +224,23 @@ pub struct AllRankIter {
     range: Range<u8>
 }
 
+impl  AllRankIter {
+    fn next_with(&mut self, f: impl FnOnce(&mut Range<u8>) -> Option<u8>) -> Option<Rank> {
+        let rank = Rank::from_u8(f(&mut self.range)?);
+        Some(unsafe{ rank.unwrap_unchecked() })
+    }
+}
+
 impl Iterator for AllRankIter {
     type Item = Rank;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        Some(Rank::from_u8(self.range.next()?).unwrap())
+        self.next_with(Iterator::next)
     }
 
     fn nth(&mut self, n: usize) -> Option<Self::Item> {
-        Some(Rank::from_u8(self.range.nth(n)?).unwrap())
+        self.next_with(|range| range.nth(n))
     }
 
     #[inline]
@@ -238,11 +252,11 @@ impl Iterator for AllRankIter {
 impl DoubleEndedIterator for AllRankIter {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        Some(Rank::from_u8(self.range.next_back()?).unwrap())
+        self.next_with(DoubleEndedIterator::next_back)
     }
 
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
-        Some(Rank::from_u8(self.range.nth_back(n)?).unwrap())
+        self.next_with(|range| range.nth_back(n))
     }
 }
 
