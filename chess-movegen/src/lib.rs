@@ -378,7 +378,7 @@ impl Board {
         self.turn
     }
 
-    pub fn update_pin_info(&mut self) {
+    fn update_pin_info(&mut self) {
         self.pinned = BitBoard::empty();
         self.checkers = BitBoard::empty();
 
@@ -432,6 +432,7 @@ impl Board {
     /// * The color of mv.end must be !self.turn or an empty tile
     /// * mv.promotion must only be set if the moved piece is a pawn and it is moving to the promotion rank
     /// * mv must be a legal chess move
+    #[inline]
     pub unsafe fn move_unchecked(&self, mv: ChessMove) -> Self {
         let mut board = *self;
         unsafe { self.move_unchecked_into(mv, &mut board) }
@@ -446,6 +447,7 @@ impl Board {
     /// * The color of mv.end must be !self.turn or an empty tile
     /// * mv.promotion must only be set if the moved piece is a pawn and it is moving to the promotion rank
     /// * mv must be a legal chess move
+    #[inline]
     pub unsafe fn move_unchecked_mut(&mut self, mv: ChessMove) {
         let board = *self;
         unsafe { board.move_unchecked_into(mv, self) }
@@ -550,6 +552,7 @@ impl Board {
         }
     }
 
+    #[inline]
     fn xor(&mut self, color: Color, piece: Piece, diff: BitBoard) {
         self.raw.xor(color, piece, diff);
         for pos in diff {
