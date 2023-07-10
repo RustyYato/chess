@@ -216,50 +216,43 @@ impl PieceType for King {
         }
 
         if !IS_IN_CHECK {
-            if board.castle_rights.contains(Side::King, board.turn)
-                && (chess_lookup::KINGSIDE_CASTLE_FILES
-                    & chess_lookup::BACKRANK_BB[board.turn]
-                    & combined)
-                    .none()
-            {
-                let no_check_sq = chess_lookup::KINGSIDE_CASTLE_SAFE_FILES
-                    & chess_lookup::BACKRANK_BB[board.turn];
+            let data = [
+                (
+                    Side::King,
+                    chess_lookup::KINGSIDE_CASTLE_FILES,
+                    chess_lookup::KINGSIDE_CASTLE_SAFE_FILES,
+                ),
+                (
+                    Side::Queen,
+                    chess_lookup::QUEENSIDE_CASTLE_FILES,
+                    chess_lookup::QUEENSIDE_CASTLE_SAFE_FILES,
+                ),
+            ];
 
-                assert_eq!(no_check_sq.count(), 2);
-
-                if no_check_sq
-                    .iter()
-                    .all(|dest| board.is_legal_king_position(dest))
-                {
-                    moves ^= chess_lookup::KINGSIDE_CASTLE_FILES
-                        & chess_lookup::BACKRANK_BB[board.turn]
-                        & chess_lookup::CASTLE_MOVES
+            for (side, castle_files, castle_safe_files) in data {
+                if !board.castle_rights.contains(side, board.turn) {
+                    continue;
                 }
-            }
 
-            if board.castle_rights.contains(Side::Queen, board.turn)
-                && (chess_lookup::QUEENSIDE_CASTLE_FILES
-                    & chess_lookup::BACKRANK_BB[board.turn]
-                    & combined)
-                    .none()
-            {
-                let no_check_sq = chess_lookup::QUEENSIDE_CASTLE_SAFE_FILES
-                    & chess_lookup::BACKRANK_BB[board.turn];
+                let backrank = chess_lookup::BACKRANK_BB[board.turn];
+                let castle_tiles = castle_files & backrank;
 
-                assert_eq!(no_check_sq.count(), 2);
-
-                if no_check_sq
-                    .iter()
-                    .all(|dest| board.is_legal_king_position(dest))
+                if board.castle_rights.contains(side, board.turn)
+                    && (castle_tiles & combined).none()
                 {
-                    moves ^= chess_lookup::QUEENSIDE_CASTLE_FILES
-                        & chess_lookup::BACKRANK_BB[board.turn]
-                        & chess_lookup::CASTLE_MOVES
+                    let no_check_sq = castle_safe_files & backrank;
+
+                    debug_assert_eq!(no_check_sq.count(), 2);
+
+                    if no_check_sq
+                        .iter()
+                        .all(|dest| board.is_legal_king_position(dest))
+                    {
+                        moves ^= castle_tiles & chess_lookup::CASTLE_MOVES
+                    }
                 }
             }
         }
-
-        //
 
         if moves.none() {
             return;
@@ -307,28 +300,3 @@ impl PieceType for Queen {
         (chess_lookup::rook_moves(src, combined) | chess_lookup::bishop_moves(src, combined)) & mask
     }
 }
-
-// #[test]
-// fn test() {
-//     let board = crate::Board::builder()
-//         .place(Pos::F4, Color::White, Piece::King)
-//         .unwrap()
-//         .place(Pos::A8, Color::Black, Piece::King)
-//         .unwrap()
-//         .place(Pos::D5, Color::White, Piece::Pawn)
-//         .unwrap()
-//         .place(Pos::E5, Color::Black, Piece::Pawn)
-//         .unwrap()
-//         // .place(Pos::H8, Color::Black, Piece::Bishop)
-//         // .unwrap()
-//         .enpassant(chess_bitboard::File::E)
-//         .turn(Color::White)
-//         .build()
-//         .unwrap();
-
-//     eprintln!("{board:?}");
-
-//     let moves = board.collect_moves();
-//     dbg!(moves);
-//     panic!()
-// }
