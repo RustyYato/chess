@@ -4,6 +4,9 @@ use chess_bitboard::{BitBoard, Pos, PromotionPiece};
 mod pieces;
 use pieces::*;
 
+#[cfg(test)]
+mod tests;
+
 const NO_CHECK: bool = false;
 const IN_CHECK: bool = true;
 
