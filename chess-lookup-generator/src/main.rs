@@ -25,9 +25,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     write_pawn_moves(target_dir)?;
     write_between(target_dir)?;
     write_line(target_dir)?;
-    // write_bishop_moves(target_dir)?;
-    // write_rook_moves(target_dir)?;
-    // write_zobrist(target_dir)?;
+    write_bishop_moves(target_dir)?;
+    write_rook_moves(target_dir)?;
+    write_zobrist(target_dir)?;
 
     Ok(())
 }

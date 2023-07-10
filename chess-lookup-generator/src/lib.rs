@@ -146,13 +146,19 @@ pub fn between() -> Vec<BitBoard> {
             let b_rank = b.rank() as i8;
 
             boards.push(if a_file == b_file {
+                let min_rank = a.rank().min(b.rank());
+                let max_rank = a.rank().max(b.rank());
+
                 Rank::all()
-                    .filter(|&rank| a.rank() < rank && rank < b.rank())
+                    .filter(|&rank| min_rank < rank && rank < max_rank)
                     .map(|rank| Pos::new(a.file(), rank))
                     .collect()
             } else if a_rank == b_rank {
+                let min_file = a.file().min(b.file());
+                let max_file = a.file().max(b.file());
+
                 File::all()
-                    .filter(|&file| a.file() < file && file < b.file())
+                    .filter(|&file| min_file < file && file < max_file)
                     .map(|file| Pos::new(file, a.rank()))
                     .collect()
             } else {
