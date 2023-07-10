@@ -11,8 +11,8 @@ use score::Score;
 
 #[derive(Default)]
 pub struct Engine {
-    moves_evaluated: u64,
-    cutoffs: BTreeMap<u16, u64>,
+    pub moves_evaluated: u64,
+    pub cutoffs: BTreeMap<u16, u64>,
 }
 
 pub struct DurationTimeout {
@@ -72,8 +72,12 @@ impl Policy for White {
 
     #[inline]
     fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool {
-        *alpha = score;
-        score >= *beta
+        if *alpha < score {
+            *alpha = score;
+            score > *beta
+        } else {
+            true
+        }
     }
 }
 
@@ -90,8 +94,12 @@ impl Policy for Black {
 
     #[inline]
     fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool {
-        *beta = score;
-        score <= *alpha
+        if *beta > score {
+            *beta = score;
+            score < *alpha
+        } else {
+            true
+        }
     }
 }
 
@@ -100,6 +108,8 @@ struct SearchState<'a> {
     next_board: Board,
     best_mv: Option<ChessMove>,
     score: Score,
+    alpha: Score,
+    beta: Score,
     depth: u16,
 }
 
@@ -129,14 +139,22 @@ impl Engine {
             current: board,
             next_board: Board::standard(),
             score: P::WORST_SCORE,
+            alpha: Score::Min,
+            beta: Score::Max,
             best_mv: None,
             depth: 1,
         };
 
         loop {
+            eprintln!("depth = {}", state.depth);
             let mut moves = moves.clone();
 
+            state.score = P::WORST_SCORE;
+            state.alpha = Score::Min;
+            state.beta = Score::Max;
+
             if let Some(best_mv) = state.best_mv {
+                eprintln!("best {best_mv:?}");
                 moves.remove_move(best_mv);
                 self.search_root_move::<P, _>(best_mv, &mut state, timeout)
             }
@@ -169,6 +187,8 @@ impl Engine {
                 self.search_root_move::<P, _>(mv, &mut state, timeout)
             }
 
+            eprintln!("{:?}\t{:?}", state.score, self.cutoffs.last_entry());
+
             if timeout.is_complete() {
                 break;
             }
@@ -194,14 +214,16 @@ impl Engine {
             &state.next_board,
             state.depth,
             0,
-            Score::Min,
-            Score::Max,
+            state.alpha,
+            state.beta,
             timeout,
         );
 
         if P::is_better(state.score, new) {
             state.score = new;
             state.best_mv = Some(mv);
+
+            P::update_cutoff(&mut state.alpha, &mut state.beta, new);
         }
     }
 
@@ -221,8 +243,8 @@ impl Engine {
                 // if white has no moves, and is in check
                 // then black mated them and vice versa
                 match P::COLOR {
-                    Color::White => Score::BlackMateIn(current_depth),
-                    Color::Black => Score::WhiteMateIn(current_depth),
+                    Color::White => Score::WhiteMateIn(current_depth),
+                    Color::Black => Score::BlackMateIn(current_depth),
                 }
             } else {
                 Score::Raw(0)
@@ -255,12 +277,12 @@ impl Engine {
                 continue;
             }
 
+            score = new;
+
             if P::update_cutoff(&mut alpha, &mut beta, new) {
                 *self.cutoffs.entry(depth).or_default() += 1;
                 break;
             }
-
-            score = new;
         }
 
         score
