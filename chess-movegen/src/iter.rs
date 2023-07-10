@@ -53,14 +53,14 @@ impl Board {
             Rook::legals::<NO_CHECK>(movelist, self, mask);
             Queen::legals::<NO_CHECK>(movelist, self, mask);
             King::legals::<NO_CHECK>(movelist, self, mask);
-        } else if self.checkers.count() == 1 {
-            Pawn::legals::<IN_CHECK>(movelist, self, mask);
-            Knight::legals::<IN_CHECK>(movelist, self, mask);
-            Bishop::legals::<IN_CHECK>(movelist, self, mask);
-            Rook::legals::<IN_CHECK>(movelist, self, mask);
-            Queen::legals::<IN_CHECK>(movelist, self, mask);
-            King::legals::<IN_CHECK>(movelist, self, mask);
         } else {
+            if self.checkers.count() == 1 {
+                Pawn::legals::<IN_CHECK>(movelist, self, mask);
+                Knight::legals::<IN_CHECK>(movelist, self, mask);
+                Bishop::legals::<IN_CHECK>(movelist, self, mask);
+                Rook::legals::<IN_CHECK>(movelist, self, mask);
+                Queen::legals::<IN_CHECK>(movelist, self, mask);
+            }
             King::legals::<IN_CHECK>(movelist, self, mask);
         }
 

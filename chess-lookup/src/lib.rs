@@ -40,7 +40,7 @@ pub fn king_moves(pos: Pos) -> BitBoard {
     BitBoard::from(king_moves::MOVES[pos])
 }
 
-// #[inline]
+#[inline]
 pub fn pawn_moves(pos: Pos, color: Color, all_pieces: BitBoard) -> BitBoard {
     pawn_quiets(pos, color, all_pieces) | pawn_attacks(pos, color, all_pieces)
 }
