@@ -4,9 +4,6 @@ use chess_bitboard::{BitBoard, Pos, PromotionPiece};
 mod pieces;
 use pieces::*;
 
-#[cfg(test)]
-mod tests;
-
 const NO_CHECK: bool = false;
 const IN_CHECK: bool = true;
 
@@ -77,7 +74,7 @@ impl Board {
         if depth == 1 {
             iterable.len()
         } else {
-            let mut next_board = *self;
+            let mut next_board = Board::standard();
             for m in iterable {
                 unsafe { self.move_unchecked_into(m, &mut next_board) };
                 result += next_board.perft_test(depth - 1);

@@ -1,4 +1,4 @@
-use crate::Board;
+use chess_movegen::Board;
 
 fn movegen_perft_test(fen: String, depth: usize, result: usize) {
     let board: Board = fen.parse().unwrap();
