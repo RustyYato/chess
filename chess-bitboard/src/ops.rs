@@ -2,7 +2,7 @@ use core::ops::{
     BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Sub, SubAssign,
 };
 
-use crate::BitBoard;
+use crate::{BitBoard, Pos};
 
 impl BitOr for BitBoard {
     type Output = Self;
@@ -40,6 +40,15 @@ impl Sub for BitBoard {
     }
 }
 
+impl Sub<Pos> for BitBoard {
+    type Output = Self;
+
+    #[inline(always)]
+    fn sub(self, rhs: Pos) -> Self::Output {
+        self.cleared(rhs)
+    }
+}
+
 impl BitOrAssign for BitBoard {
     #[inline(always)]
     fn bitor_assign(&mut self, rhs: Self) {
@@ -65,6 +74,13 @@ impl SubAssign for BitBoard {
     #[inline(always)]
     fn sub_assign(&mut self, rhs: Self) {
         *self = *self - rhs
+    }
+}
+
+impl SubAssign<Pos> for BitBoard {
+    #[inline(always)]
+    fn sub_assign(&mut self, rhs: Pos) {
+        self.clear(rhs)
     }
 }
 

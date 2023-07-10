@@ -224,6 +224,15 @@ impl FromIterator<Pos> for BitBoard {
     }
 }
 
+impl FromIterator<BitBoard> for BitBoard {
+    #[inline]
+    fn from_iter<T: IntoIterator<Item = BitBoard>>(iter: T) -> Self {
+        let mut board = BitBoard::empty();
+        iter.into_iter().for_each(|other| board |= other);
+        board
+    }
+}
+
 impl From<Pos> for BitBoard {
     #[inline]
     fn from(value: Pos) -> Self {

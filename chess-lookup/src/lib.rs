@@ -5,9 +5,10 @@ use chess_bitboard::{BitBoard, Color, File, Piece, Pos, Rank};
 mod between;
 mod bishop_moves;
 mod bishop_rays;
+mod king_moves;
 mod knight_moves;
 mod line;
-mod pawn_attacks;
+mod pawn;
 mod rook_moves;
 mod rook_rays;
 mod zobrist;
@@ -35,8 +36,37 @@ pub fn knight_moves(pos: Pos) -> BitBoard {
 }
 
 #[inline]
+pub fn king_moves(pos: Pos) -> BitBoard {
+    BitBoard::from(king_moves::MOVES[pos])
+}
+
+// #[inline]
+pub fn pawn_moves(pos: Pos, color: Color, all_pieces: BitBoard) -> BitBoard {
+    pawn_quiets(pos, color, all_pieces) | pawn_attacks(pos, color, all_pieces)
+}
+
+#[inline]
+pub fn pawn_quiets(pos: Pos, color: Color, all_pieces: BitBoard) -> BitBoard {
+    let current = BitBoard::from(pos);
+    let next = match color {
+        Color::White => current.shift_up(),
+        Color::Black => current.shift_down(),
+    };
+    if (next & all_pieces).any() {
+        BitBoard::empty()
+    } else {
+        BitBoard::from(pawn::PAWN_QUIETS[pos][color]) & !all_pieces
+    }
+}
+
+#[inline]
+pub fn pawn_attacks(pos: Pos, color: Color, all_pieces: BitBoard) -> BitBoard {
+    BitBoard::from(pawn::PAWN_ATTACKS[pos][color]) & all_pieces
+}
+
+#[inline]
 pub fn pawn_attacks_moves(pos: Pos, color: Color) -> BitBoard {
-    BitBoard::from(pawn_attacks::PAWN_ATTACKS[pos][color])
+    BitBoard::from(pawn::PAWN_ATTACKS[pos][color])
 }
 
 #[inline]
@@ -150,3 +180,36 @@ pub const PROMOTION_RANK: [Rank; 2] = [Rank::_8, Rank::_1];
 
 pub const PAWN_DOUBLE_MOVE_SOURCE_RANK: [Rank; 2] = [Rank::_2, Rank::_7];
 pub const PAWN_DOUBLE_MOVE_DEST_RANK: [Rank; 2] = [Rank::_4, Rank::_5];
+
+pub static ADJACENT_FILES: [BitBoard; 8] = [
+    BitBoard::from_file(File::B),
+    BitBoard::from_file(File::A).or(BitBoard::from_file(File::C)),
+    BitBoard::from_file(File::B).or(BitBoard::from_file(File::D)),
+    BitBoard::from_file(File::E).or(BitBoard::from_file(File::C)),
+    BitBoard::from_file(File::F).or(BitBoard::from_file(File::D)),
+    BitBoard::from_file(File::E).or(BitBoard::from_file(File::G)),
+    BitBoard::from_file(File::F).or(BitBoard::from_file(File::H)),
+    BitBoard::from_file(File::G),
+];
+
+pub const KINGSIDE_CASTLE_FILES: BitBoard =
+    BitBoard::from_file(File::F).or(BitBoard::from_file(File::G));
+pub const QUEENSIDE_CASTLE_FILES: BitBoard = BitBoard::from_file(File::B)
+    .or(BitBoard::from_file(File::C))
+    .or(BitBoard::from_file(File::D));
+
+pub const KINGSIDE_CASTLE_SAFE_FILES: BitBoard =
+    BitBoard::from_file(File::F).or(BitBoard::from_file(File::G));
+pub const QUEENSIDE_CASTLE_SAFE_FILES: BitBoard =
+    BitBoard::from_file(File::C).or(BitBoard::from_file(File::D));
+
+#[test]
+fn test_adjacent() {
+    for file in File::all() {
+        let file_bb = BitBoard::from(file);
+        assert_eq!(
+            ADJACENT_FILES[file],
+            file_bb.shift_left() | file_bb.shift_right()
+        )
+    }
+}

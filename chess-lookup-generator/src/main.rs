@@ -21,12 +21,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     write_rook_rays(target_dir)?;
     write_bishop_rays(target_dir)?;
     write_knight_moves(target_dir)?;
-    write_pawn_attacks(target_dir)?;
+    write_king_moves(target_dir)?;
+    write_pawn_moves(target_dir)?;
     write_between(target_dir)?;
     write_line(target_dir)?;
-    write_bishop_moves(target_dir)?;
-    write_rook_moves(target_dir)?;
-    write_zobrist(target_dir)?;
+    // write_bishop_moves(target_dir)?;
+    // write_rook_moves(target_dir)?;
+    // write_zobrist(target_dir)?;
 
     Ok(())
 }
@@ -114,8 +115,20 @@ fn write_knight_moves(target_dir: &Path) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn write_pawn_attacks(target_dir: &Path) -> Result<(), Box<dyn Error>> {
-    let mut all_rays = BufWriter::new(File::create(target_dir.join("pawn_attacks.rs"))?);
+fn write_king_moves(target_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let mut all_rays = BufWriter::new(File::create(target_dir.join("king_moves.rs"))?);
+
+    writeln!(all_rays, "pub(super) static MOVES: [u64; 64] = [")?;
+    for pos in Pos::all() {
+        let rays = chess_lookup_generator::king_moves(pos);
+        writeln!(all_rays, "    0x{:x},", rays.to_u64())?;
+    }
+    writeln!(all_rays, "];")?;
+    Ok(())
+}
+
+fn write_pawn_moves(target_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let mut all_rays = BufWriter::new(File::create(target_dir.join("pawn.rs"))?);
 
     writeln!(
         all_rays,
@@ -123,6 +136,21 @@ fn write_pawn_attacks(target_dir: &Path) -> Result<(), Box<dyn Error>> {
     )?;
     for pos in Pos::all() {
         let [white, black] = chess_lookup_generator::pawn_attacks(pos);
+        writeln!(
+            all_rays,
+            "    [0x{:x}, 0x{:x}],",
+            white.to_u64(),
+            black.to_u64()
+        )?;
+    }
+    writeln!(all_rays, "];")?;
+
+    writeln!(
+        all_rays,
+        "pub(super) static PAWN_QUIETS: [[u64; 2]; 64] = ["
+    )?;
+    for pos in Pos::all() {
+        let [white, black] = chess_lookup_generator::pawn_quiets(pos);
         writeln!(
             all_rays,
             "    [0x{:x}, 0x{:x}],",

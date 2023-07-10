@@ -2,6 +2,7 @@
 
 mod castle_rights;
 pub mod fen;
+mod iter;
 pub mod raw;
 
 use std::{
@@ -257,7 +258,7 @@ impl Board {
 
     pub const fn standard() -> Self {
         Self {
-            zobrist: 6185573332844800904,
+            zobrist: 2044085020143996643,
             turn: Color::White,
             castle_rights: castle_rights::CastleRights::full(),
             enpassant_target: None,

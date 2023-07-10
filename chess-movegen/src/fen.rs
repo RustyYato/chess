@@ -241,12 +241,3 @@ fn parse_piece(s: &[u8]) -> (Option<Result<(Color, Piece), u8>>, &[u8]) {
         _ => (None, s),
     }
 }
-
-#[test]
-fn test() {
-    let board =
-        "rnbqkbnr/1ppppppp/8/p7/8/8/PPPPPPPP/RNBQKBNR w KQkq a6 1 0".parse::<crate::Board>();
-
-    eprintln!("{board:?}");
-    panic!()
-}

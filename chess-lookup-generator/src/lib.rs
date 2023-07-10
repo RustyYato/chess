@@ -251,6 +251,23 @@ pub fn knight_moves(pos: Pos) -> BitBoard {
     moves
 }
 
+pub fn king_moves(pos: Pos) -> BitBoard {
+    let mut moves = BitBoard::empty();
+    let pos_bb = BitBoard::from(pos);
+
+    moves |= pos_bb.shift_up();
+    moves |= pos_bb.shift_down();
+    moves |= pos_bb.shift_left();
+    moves |= pos_bb.shift_right();
+
+    moves |= pos_bb.shift_up().shift_left();
+    moves |= pos_bb.shift_up().shift_right();
+    moves |= pos_bb.shift_down().shift_left();
+    moves |= pos_bb.shift_down().shift_right();
+
+    moves
+}
+
 pub fn pawn_attacks(pos: Pos) -> [BitBoard; 2] {
     let pos_bb = BitBoard::from(pos);
 
@@ -261,6 +278,24 @@ pub fn pawn_attacks(pos: Pos) -> [BitBoard; 2] {
     let mut black_moves = BitBoard::empty();
     black_moves |= pos_bb.shift_down().shift_left();
     black_moves |= pos_bb.shift_down().shift_right();
+
+    [white_moves, black_moves]
+}
+
+pub fn pawn_quiets(pos: Pos) -> [BitBoard; 2] {
+    let pos_bb = BitBoard::from(pos);
+
+    let mut white_moves = BitBoard::empty();
+    white_moves |= pos_bb.shift_up();
+    if pos.rank() == Rank::_2 {
+        white_moves |= pos_bb.shift_up().shift_up();
+    }
+
+    let mut black_moves = BitBoard::empty();
+    black_moves |= pos_bb.shift_down();
+    if pos.rank() == Rank::_7 {
+        black_moves |= pos_bb.shift_down().shift_down();
+    }
 
     [white_moves, black_moves]
 }

@@ -10,3 +10,6 @@ path = '../chess-bitboard'
 
 [dependencies.chess-lookup]
 path = '../chess-lookup'
+
+[dependencies.arrayvec]
+version = '0.7'
