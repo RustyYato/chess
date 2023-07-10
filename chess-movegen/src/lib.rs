@@ -8,6 +8,7 @@ pub mod raw;
 use std::{
     fmt::{Debug, Write},
     hash::Hash,
+    ops::Index,
     str::FromStr,
 };
 
@@ -349,8 +350,8 @@ impl Board {
         Ok(())
     }
 
-    pub fn raw(&self) -> raw::RawBoard {
-        self.raw
+    pub fn raw(&self) -> &raw::RawBoard {
+        &self.raw
     }
 
     #[inline]
@@ -382,6 +383,11 @@ impl Board {
     #[inline]
     pub fn turn(&self) -> Color {
         self.turn
+    }
+
+    #[inline]
+    pub fn in_check(&self) -> bool {
+        self.checkers.any()
     }
 
     fn update_pin_info(&mut self) {
@@ -596,6 +602,24 @@ impl Board {
         for pos in diff {
             self.zobrist ^= chess_lookup::zobrist(pos, piece, color);
         }
+    }
+}
+
+impl Index<Color> for Board {
+    type Output = BitBoard;
+
+    #[inline]
+    fn index(&self, index: Color) -> &Self::Output {
+        &self.raw[index]
+    }
+}
+
+impl Index<Piece> for Board {
+    type Output = BitBoard;
+
+    #[inline]
+    fn index(&self, index: Piece) -> &Self::Output {
+        &self.raw[index]
     }
 }
 

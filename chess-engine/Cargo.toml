@@ -1,5 +1,5 @@
 [package]
-name = "chess-cli"
+name = "chess-engine"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,8 +11,5 @@ path = '../chess-bitboard'
 [dependencies.chess-movegen]
 path = '../chess-movegen'
 
-[dependencies.chess-engine]
-path = '../chess-engine'
-
-[dependencies.chess]
-workspace = true
+[dependencies.readable]
+version = '0.7'

@@ -7,6 +7,7 @@ members = [
     'chess-lookup',
     'chess-lookup-generator',
     'chess-movegen',
+    'chess-engine',
     'chess-cli',
 ]
 

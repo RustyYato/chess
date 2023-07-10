@@ -14,6 +14,7 @@ static PROMOTION_PIECES: [PromotionPiece; 4] = [
     PromotionPiece::Knight,
 ];
 
+#[derive(Clone)]
 pub struct MoveGen {
     moves: MoveList,
     promotions: core::slice::Iter<'static, PromotionPiece>,
@@ -23,7 +24,7 @@ pub struct MoveGen {
 
 type MoveList = arrayvec::ArrayVec<LegalMovesAt, 18>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct LegalMovesAt {
     src: Pos,
     moves: BitBoard,
@@ -128,8 +129,6 @@ impl MoveGen {
                 }
             }
         }
-
-        self.index = unsafe { j.offset_from(moves.as_ptr()) } as usize
     }
 }
 
