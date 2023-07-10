@@ -237,6 +237,7 @@ pub enum BoardValidationError {
     MissingKings,
     InvalidCastleRights,
     InvalidEnpassant,
+    TooManyPieces,
 }
 
 impl Board {
@@ -273,6 +274,10 @@ impl Board {
     fn validate(&self) -> Result<(), BoardValidationError> {
         if !self.raw.has_kings() {
             return Err(BoardValidationError::MissingKings);
+        }
+
+        if self.raw[Color::White].count() > 16 || self.raw[Color::Black].count() > 16 {
+            return Err(BoardValidationError::TooManyPieces);
         }
 
         self.validate_en_passant()?;
