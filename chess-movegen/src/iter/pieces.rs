@@ -173,7 +173,10 @@ impl Board {
 
         let pinners = opp_bb & (bishop_pinners | rook_pinners);
 
-        let pieces = self.raw.all();
+        let actual_king_pos =
+            BitBoard::from(self.king_sq(self.turn)) ^ BitBoard::from_pos(king_pos);
+
+        let pieces = self.raw.all() ^ actual_king_pos;
 
         for pos in pinners {
             let between = pieces & chess_lookup::between(king_pos, pos);
