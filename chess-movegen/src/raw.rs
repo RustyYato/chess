@@ -258,7 +258,6 @@ impl Index<Piece> for RawBoard {
 
 impl RawBoard {
     pub(crate) fn xor(&mut self, color: Color, piece: Piece, diff: BitBoard) {
-        debug_assert!(self.colors[color] & diff == self.pieces[piece] & diff);
         self.colors[color] ^= diff;
         self.pieces[piece] ^= diff;
     }

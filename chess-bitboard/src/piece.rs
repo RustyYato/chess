@@ -12,7 +12,7 @@ pub enum Piece {
 }
 
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PromotionPiece {
     Knight = Piece::Knight as u8,
     Bishop = Piece::Bishop as u8,

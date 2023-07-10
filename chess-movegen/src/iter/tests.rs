@@ -1,6 +1,4 @@
 use crate::Board;
-use std::collections::HashSet;
-use std::convert::TryInto;
 
 fn movegen_perft_test(fen: String, depth: usize, result: usize) {
     let board: Board = fen.parse().unwrap();
@@ -164,6 +162,15 @@ fn movegen_perft_25() {
 #[test]
 fn movegen_perft_26() {
     movegen_perft_test("8/5k2/8/5N2/5Q2/2K5/8/8 w - - 0 1".to_owned(), 4, 23527);
+}
+
+#[test]
+fn movegen_perft_27() {
+    movegen_perft_test(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0".to_owned(),
+        4,
+        197281,
+    );
 }
 
 #[test]
