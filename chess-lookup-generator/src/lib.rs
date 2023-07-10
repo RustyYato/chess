@@ -188,6 +188,52 @@ pub fn between() -> Vec<BitBoard> {
     boards
 }
 
+pub fn line() -> Vec<BitBoard> {
+    let mut boards = Vec::new();
+
+    for a in Pos::all() {
+        let a_file = a.file() as i8;
+        let a_rank = a.rank() as i8;
+
+        for b in Pos::all() {
+            if a == b {
+                boards.push(BitBoard::empty());
+                continue;
+            }
+
+            let b_file = b.file() as i8;
+            let b_rank = b.rank() as i8;
+
+            boards.push(if a_file == b_file {
+                Rank::all().map(|rank| Pos::new(a.file(), rank)).collect()
+            } else if a_rank == b_rank {
+                File::all().map(|file| Pos::new(file, a.rank())).collect()
+            } else {
+                'bishop_moves: {
+                    let sign = if a_file - b_file == a_rank - b_rank {
+                        1
+                    } else if a_file - b_file == b_rank - a_rank {
+                        -1
+                    } else {
+                        break 'bishop_moves BitBoard::empty();
+                    };
+
+                    Pos::all()
+                        .filter(|&pos| {
+                            let p_file = pos.file() as i8;
+                            let p_rank = pos.rank() as i8;
+
+                            (a_file - p_file) * sign == a_rank - p_rank
+                        })
+                        .collect()
+                }
+            });
+        }
+    }
+
+    boards
+}
+
 pub fn knight_moves(pos: Pos) -> BitBoard {
     let mut moves = BitBoard::empty();
     let pos_bb = BitBoard::from(pos);

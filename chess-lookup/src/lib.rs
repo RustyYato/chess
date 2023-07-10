@@ -6,6 +6,7 @@ mod between;
 mod bishop_moves;
 mod bishop_rays;
 mod knight_moves;
+mod line;
 mod pawn_attacks;
 mod rook_moves;
 mod rook_rays;
@@ -69,6 +70,11 @@ pub fn rook_moves(pos: Pos, all_pieces: BitBoard) -> BitBoard {
 #[inline]
 pub fn between(a: Pos, b: Pos) -> BitBoard {
     BitBoard::from(between::SOLUTIONS[a as usize][b as usize])
+}
+
+#[inline]
+pub fn line(a: Pos, b: Pos) -> BitBoard {
+    BitBoard::from(line::SOLUTIONS[a as usize][b as usize])
 }
 
 #[inline]
