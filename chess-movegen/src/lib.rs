@@ -430,6 +430,38 @@ impl Board {
             .map(|file| Pos::new(file, self.turn.enpassant_capture_rank()))
     }
 
+    pub fn is_legal(&self, mv: ChessMove) -> bool {
+        self.legals().any(|m| m == mv)
+    }
+
+    #[must_use]
+    pub fn move_into(&self, mv: ChessMove, output: &mut Self) -> bool {
+        if self.is_legal(mv) {
+            unsafe { self.move_unchecked_into(mv, output) }
+            true
+        } else {
+            false
+        }
+    }
+
+    #[must_use]
+    pub fn move_mut(&mut self, mv: ChessMove) -> bool {
+        if self.is_legal(mv) {
+            unsafe { self.move_unchecked_mut(mv) }
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn move_new(&self, mv: ChessMove) -> Option<Self> {
+        if self.is_legal(mv) {
+            Some(unsafe { self.move_unchecked(mv) })
+        } else {
+            None
+        }
+    }
+
     /// # Safety
     ///
     /// * There must be a piece at mv.start
