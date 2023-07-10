@@ -183,11 +183,12 @@ impl Board {
             }
         }
 
+        let king_moves = chess_lookup::king_moves(king_pos) & self.raw[Piece::King] & opp_bb;
         let knight_moves = chess_lookup::knight_moves(king_pos) & self.raw[Piece::Knight] & opp_bb;
         let pawn_attacks =
             chess_lookup::pawn_attacks_moves(king_pos, self.turn) & self.raw[Piece::Pawn] & opp_bb;
 
-        (knight_moves | pawn_attacks).none()
+        (king_moves | knight_moves | pawn_attacks).none()
     }
 }
 
