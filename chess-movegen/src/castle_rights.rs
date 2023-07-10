@@ -139,6 +139,15 @@ impl CastleRights {
     }
 
     #[inline]
+    pub const fn to_index(self) -> usize {
+        let index = self.0 as usize;
+        if index >= 16 {
+            unsafe { core::hint::unreachable_unchecked() }
+        }
+        index
+    }
+
+    #[inline]
     pub const fn contains_color(self, color: Color) -> bool {
         self.0 & ((1 << offset(Side::King, color)) | (1 << offset(Side::Queen, color))) != 0
     }

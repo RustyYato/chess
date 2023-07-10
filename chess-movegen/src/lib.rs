@@ -6,12 +6,14 @@ pub mod raw;
 
 use std::{
     fmt::{Debug, Write},
+    hash::Hash,
     str::FromStr,
 };
 
 use chess_bitboard::{BitBoard, Color, File, Piece, Pos, PromotionPiece, Rank, Side};
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Board {
+    zobrist: u64,
     turn: Color,
     castle_rights: castle_rights::CastleRights,
     enpassant_target: Option<chess_bitboard::File>,
@@ -20,6 +22,12 @@ pub struct Board {
     pinned: BitBoard,
     checkers: BitBoard,
     raw: raw::RawBoard,
+}
+
+impl Hash for Board {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.zobrist().hash(state);
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -101,6 +109,8 @@ impl core::fmt::Debug for Board {
         }
         f.write_str("\ncastle rights: ")?;
         self.castle_rights.fmt(f)?;
+        f.write_str("\nzobrist: ")?;
+        self.zobrist.fmt(f)?;
         f.write_str("\nboard:\n")?;
         if f.alternate() {
             self.raw.fmt(f)?;
@@ -198,12 +208,14 @@ impl BoardBuilder {
         piece: Piece,
     ) -> Result<&mut Self, raw::PieceAlreadyExists> {
         self.board.raw.set(color, piece, pos)?;
+        self.board.zobrist ^= chess_lookup::zobrist(pos, piece, color);
         Ok(self)
     }
 
     #[inline]
     pub fn remove(&mut self, pos: Pos) -> &mut Self {
         if let Some((color, piece)) = self.board.raw.get(pos) {
+            self.board.zobrist ^= chess_lookup::zobrist(pos, piece, color);
             self.board.raw.remove(color, piece, pos);
         }
 
@@ -230,6 +242,7 @@ impl Board {
     pub const fn builder() -> BoardBuilder {
         BoardBuilder {
             board: Self {
+                zobrist: 0,
                 turn: Color::White,
                 castle_rights: castle_rights::CastleRights::empty(),
                 enpassant_target: None,
@@ -244,6 +257,7 @@ impl Board {
 
     pub const fn standard() -> Self {
         Self {
+            zobrist: 6185573332844800904,
             turn: Color::White,
             castle_rights: castle_rights::CastleRights::full(),
             enpassant_target: None,
@@ -337,6 +351,26 @@ impl Board {
     pub fn king_sq(&self, color: Color) -> chess_bitboard::Pos {
         let mut king_board = self.raw[color] & self.raw[Piece::King];
         unsafe { king_board.pop_unchecked() }
+    }
+
+    #[inline]
+    pub fn half_move_clock(&self) -> u16 {
+        self.half_move_clock
+    }
+
+    #[inline]
+    pub fn full_move_clock(&self) -> u16 {
+        self.full_move_clock
+    }
+
+    #[inline]
+    pub fn zobrist(&self) -> u64 {
+        self.zobrist
+            ^ chess_lookup::turn_zobrist(self.turn)
+            ^ self
+                .enpassant_target
+                .map_or(0, chess_lookup::en_passant_zobrist)
+            ^ chess_lookup::castle_rights_zobrist(self.castle_rights.to_index())
     }
 
     #[inline]
@@ -439,10 +473,14 @@ impl Board {
         let piece = unsafe { self.raw.piece_of_unchecked(mv.source) };
         let captured = self.raw.piece_of(mv.dest);
 
-        output.raw.xor(self.turn, piece, mv_bb);
+        output.xor(self.turn, piece, mv_bb);
         if let Some(captured) = captured {
-            output.raw.xor(!self.turn, captured, dest_bb);
+            output.xor(!self.turn, captured, dest_bb);
+            output.half_move_clock = 0;
+        } else {
+            output.half_move_clock += 1;
         }
+        output.full_move_clock += self.turn as u16;
 
         output.castle_rights.remove_for_sq(!self.turn, mv.dest);
         output.castle_rights.remove_for_sq(self.turn, mv.source);
@@ -453,6 +491,7 @@ impl Board {
         if piece == Piece::Knight {
             output.checkers ^= chess_lookup::knight_moves(opp_king) & dest_bb;
         } else if piece == Piece::Pawn {
+            output.half_move_clock = 0;
             if let Some(promotion) = mv.promotion {
                 debug_assert_eq!(mv.dest.rank(), chess_lookup::PROMOTION_RANK[self.turn]);
 
@@ -461,15 +500,15 @@ impl Board {
                     output.checkers ^= chess_lookup::knight_moves(opp_king) & dest_bb;
                 }
 
-                output.raw.xor(self.turn, Piece::Pawn, dest_bb);
-                output.raw.xor(self.turn, promotion.to_piece(), dest_bb);
+                output.xor(self.turn, Piece::Pawn, dest_bb);
+                output.xor(self.turn, promotion.to_piece(), dest_bb);
             } else if mv_bb & chess_lookup::PAWN_DOUBLE_MOVE[self.turn] == mv_bb {
                 output.enpassant_target = Some(mv.dest.file());
             } else if Some(mv.dest) == self.enpassant_pos() {
                 let ep_file = mv.dest.file();
 
                 // remove pawn by en-passant
-                output.raw.xor(
+                output.xor(
                     !self.turn,
                     Piece::Pawn,
                     BitBoard::from_pos(Pos::new(ep_file, self.turn.enpassant_pawn_rank())),
@@ -486,7 +525,7 @@ impl Board {
                     Side::Queen => chess_lookup::ROOK_CASTLE_QUEENSIDE,
                 };
 
-            output.raw.xor(self.turn, Piece::Rook, rook_mv);
+            output.xor(self.turn, Piece::Rook, rook_mv);
         }
 
         let pieces = output.raw[self.turn];
@@ -508,6 +547,13 @@ impl Board {
             } else if between.count() == 1 {
                 output.pinned ^= between;
             }
+        }
+    }
+
+    fn xor(&mut self, color: Color, piece: Piece, diff: BitBoard) {
+        self.raw.xor(color, piece, diff);
+        for pos in diff {
+            self.zobrist ^= chess_lookup::zobrist(pos, piece, color);
         }
     }
 }

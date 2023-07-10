@@ -34,6 +34,7 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
     let mut rank = ranks.next().unwrap();
 
     let mut board = raw::RawBoard::empty();
+    let mut zobrist = 0;
 
     loop {
         let (out, rest) = parse_piece(s);
@@ -44,6 +45,7 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
         let dist = match out {
             Some(Ok((color, piece))) => {
                 board.set_unchecked(color, piece, pos);
+                zobrist ^= chess_lookup::zobrist(pos, piece, color);
                 1
             }
             Some(Err(dist)) => dist,
@@ -143,6 +145,7 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
     let full_move_clock = parse_number(&mut s).ok_or(ParseFenError::MissingFullClock)?;
 
     let mut board = crate::Board {
+        zobrist,
         raw: board,
         turn,
         pinned: chess_bitboard::BitBoard::empty(),

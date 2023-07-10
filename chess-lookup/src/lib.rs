@@ -73,7 +73,22 @@ pub fn between(a: Pos, b: Pos) -> BitBoard {
 
 #[inline]
 pub fn zobrist(pos: Pos, piece: Piece, color: Color) -> u64 {
-    zobrist::ZOBRIST[color][pos][piece]
+    zobrist::PIECE_ZOBRIST[color][pos][piece]
+}
+
+#[inline]
+pub fn castle_rights_zobrist(castle_rights: usize) -> u64 {
+    zobrist::CASTLE_ZOBRIST[castle_rights]
+}
+
+#[inline]
+pub fn en_passant_zobrist(file: File) -> u64 {
+    zobrist::EN_PASSANT_ZOBRIST[file]
+}
+
+#[inline]
+pub fn turn_zobrist(color: Color) -> u64 {
+    zobrist::TURN_ZOBRIST[color]
 }
 
 pub const PAWN_DOUBLE_SOURCE: BitBoard =

@@ -1,6 +1,6 @@
 use std::{error::Error, fs::File, io::BufWriter, io::Write, path::Path};
 
-use chess_bitboard::{Color, Piece, Pos};
+use chess_bitboard::{Color, File as ChessFile, Piece, Pos};
 use chess_lookup_generator::MagicTable;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -35,7 +35,7 @@ fn write_zobrist(target_dir: &Path) -> Result<(), Box<dyn Error>> {
 
     writeln!(
         zobrist,
-        "pub(super) static ZOBRIST: [[[u64; 6]; 64]; 2] = ["
+        "pub(super) static PIECE_ZOBRIST: [[[u64; 6]; 64]; 2] = ["
     )?;
     for _ in Color::all() {
         write!(zobrist, "[")?;
@@ -49,6 +49,31 @@ fn write_zobrist(target_dir: &Path) -> Result<(), Box<dyn Error>> {
         write!(zobrist, "],")?
     }
     writeln!(zobrist, "];")?;
+
+    writeln!(zobrist, "pub(super) static CASTLE_ZOBRIST: [u64; 16] = [")?;
+
+    for _ in 0..16 {
+        write!(zobrist, "0x{:x},", rand::random::<u64>())?
+    }
+    writeln!(zobrist, "];")?;
+
+    writeln!(
+        zobrist,
+        "pub(super) static EN_PASSANT_ZOBRIST: [u64; 8] = ["
+    )?;
+
+    for _ in ChessFile::all() {
+        write!(zobrist, "0x{:x},", rand::random::<u64>())?
+    }
+    writeln!(zobrist, "];")?;
+
+    writeln!(zobrist, "pub(super) static TURN_ZOBRIST: [u64; 2] = [")?;
+
+    for _ in Color::all() {
+        write!(zobrist, "0x{:x},", rand::random::<u64>())?
+    }
+    writeln!(zobrist, "];")?;
+
     Ok(())
 }
 
