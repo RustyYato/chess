@@ -103,6 +103,17 @@ pub fn between(a: Pos, b: Pos) -> BitBoard {
 }
 
 #[inline]
+pub fn distance(a: Pos, b: Pos) -> u8 {
+    let a_rank = a.rank() as u8;
+    let b_rank = b.rank() as u8;
+
+    let a_file = a.file() as u8;
+    let b_file = b.file() as u8;
+
+    a_rank.abs_diff(b_rank).max(a_file.abs_diff(b_file))
+}
+
+#[inline]
 pub fn line(a: Pos, b: Pos) -> BitBoard {
     BitBoard::from(line::SOLUTIONS[a as usize][b as usize])
 }

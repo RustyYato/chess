@@ -112,6 +112,39 @@ struct SearchState<'a> {
     depth: u16,
 }
 
+#[derive(Clone, Copy)]
+struct BoardList<'a> {
+    prev: Option<&'a BoardList<'a>>,
+    board: &'a Board,
+    count: u8,
+}
+
+impl<'a> BoardList<'a> {
+    pub fn new(board: &'a Board) -> Self {
+        Self {
+            prev: None,
+            board,
+            count: 1,
+        }
+    }
+
+    pub fn add(&'a self, board: &'a Board) -> Self {
+        Self {
+            prev: Some(self),
+            board,
+            count: self.count(board) + 1,
+        }
+    }
+
+    pub fn count(&self, board: &Board) -> u8 {
+        if self.board == board {
+            self.count
+        } else {
+            self.prev.map_or(0, |list| list.count(board))
+        }
+    }
+}
+
 impl Engine {
     pub fn search(
         &mut self,
@@ -218,6 +251,7 @@ impl Engine {
             0,
             state.alpha,
             state.beta,
+            BoardList::new(state.board),
             timeout,
         );
 
@@ -275,11 +309,27 @@ impl Engine {
         current_depth: u16,
         mut alpha: Score,
         mut beta: Score,
+        list: BoardList<'_>,
         timeout: T,
     ) -> Score {
         let was_capture = prev_board.raw().get(mv.dest).is_some();
         let board = unsafe { prev_board.move_unchecked(mv) };
         let moves = board.legals();
+
+        let list = if was_capture
+            || prev_board
+                .raw()
+                .get(mv.source)
+                .is_some_and(|(_, piece)| piece == Piece::Pawn)
+        {
+            BoardList::new(&board)
+        } else {
+            list.add(&board)
+        };
+
+        if list.count == 3 {
+            return Score::Raw(0);
+        }
 
         if moves.len() == 0 {
             return if board.in_check() {
@@ -320,6 +370,7 @@ impl Engine {
                 current_depth + 1,
                 alpha,
                 beta,
+                list,
                 timeout,
             );
 
@@ -345,21 +396,67 @@ impl Engine {
             return Score::Raw(0);
         }
 
-        let white_score = self.score_pieces(board, Color::White);
-        let black_score = self.score_pieces(board, Color::Black);
+        let mut white_score = self.score_pieces(board, Color::White);
+        let mut black_score = self.score_pieces(board, Color::Black);
 
-        Score::Raw(white_score - black_score)
+        let piece_score = white_score - black_score;
+
+        match piece_score.cmp(&0) {
+            std::cmp::Ordering::Less => {
+                if black_score < 800 + 500 * 3 {
+                    // if we are in the endgame
+                    let white_king = board.king_sq(Color::White);
+                    let black_king = board.king_sq(Color::Black);
+
+                    let dist = chess_lookup::distance(white_king, black_king);
+                    // minimize the distance to the
+                    black_score -= (dist as i32) * 100;
+                    // penalized for staying close to the edge
+                    white_score -= DIST_FROM_CENTER[white_king] as i32 * 100;
+                }
+            }
+            std::cmp::Ordering::Equal => (),
+            std::cmp::Ordering::Greater => {
+                if white_score < 800 + 500 * 3 {
+                    // if we are in the endgame
+                    let white_king = board.king_sq(Color::White);
+                    let black_king = board.king_sq(Color::Black);
+
+                    let dist = chess_lookup::distance(white_king, black_king);
+                    // minimize the distance to the
+                    white_score -= (dist as i32) * 100;
+                    // penalized for staying close to the edge
+                    black_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
+                }
+            }
+        }
+
+        let piece_score = white_score - black_score;
+
+        Score::Raw(piece_score.try_into().unwrap())
     }
 
-    fn score_pieces(&mut self, board: &Board, color: Color) -> i16 {
+    fn score_pieces(&mut self, board: &Board, color: Color) -> i32 {
         let my_pieces = board[color];
 
-        let my_queen_score = (my_pieces & board[Piece::Queen]).count() as i16 * 800;
-        let my_rook_score = (my_pieces & board[Piece::Rook]).count() as i16 * 500;
-        let my_bishop_score = (my_pieces & board[Piece::Bishop]).count() as i16 * 330;
-        let my_knight_score = (my_pieces & board[Piece::Knight]).count() as i16 * 300;
-        let my_pawn_score = (my_pieces & board[Piece::Pawn]).count() as i16 * 100;
+        let my_queen_score = (my_pieces & board[Piece::Queen]).count() as i32 * 800;
+        let my_rook_score = (my_pieces & board[Piece::Rook]).count() as i32 * 500;
+        let my_bishop_score = (my_pieces & board[Piece::Bishop]).count() as i32 * 330;
+        let my_knight_score = (my_pieces & board[Piece::Knight]).count() as i32 * 300;
+        let my_pawn_score = (my_pieces & board[Piece::Pawn]).count() as i32 * 100;
 
         my_queen_score + my_rook_score + my_bishop_score + my_knight_score + my_pawn_score
     }
 }
+
+#[rustfmt::skip]
+static DIST_FROM_CENTER: [u8; 64] = [
+    3, 3, 3, 3, 3, 3, 3, 3,
+    3, 2, 2, 2, 2, 2, 2, 3,
+    3, 2, 1, 1, 1, 1, 2, 3,
+    3, 2, 1, 0, 0, 1, 2, 3,
+    3, 2, 1, 0, 0, 1, 2, 3,
+    3, 2, 1, 1, 1, 1, 2, 3,
+    3, 2, 2, 2, 2, 2, 2, 3,
+    3, 3, 3, 3, 3, 3, 3, 3,
+];

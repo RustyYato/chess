@@ -13,7 +13,7 @@ use std::{
 };
 
 use chess_bitboard::{BitBoard, Color, File, Piece, Pos, PromotionPiece, Rank, Side};
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy)]
 pub struct Board {
     zobrist: u64,
     turn: Color,
@@ -29,6 +29,16 @@ pub struct Board {
 impl Hash for Board {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.zobrist().hash(state);
+    }
+}
+
+impl Eq for Board {}
+impl PartialEq for Board {
+    fn eq(&self, other: &Self) -> bool {
+        self.turn == other.turn
+            && self.castle_rights == other.castle_rights
+            && self.enpassant_target == other.enpassant_target
+            && self.raw == other.raw
     }
 }
 

@@ -11,5 +11,8 @@ path = '../chess-bitboard'
 [dependencies.chess-movegen]
 path = '../chess-movegen'
 
+[dependencies.chess-lookup]
+path = '../chess-lookup'
+
 [dependencies.readable]
 version = '0.7'
