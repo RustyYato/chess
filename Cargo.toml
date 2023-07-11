@@ -14,5 +14,11 @@ members = [
 [workspace.dependencies.chess]
 version = '3'
 
+[workspace.dependencies.tracing]
+version = '0.1'
+
+[workspace.dependencies.tracing-subscriber]
+version = '0.3'
+
 [profile.release]
 debug = true

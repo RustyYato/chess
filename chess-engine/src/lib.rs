@@ -5,8 +5,9 @@ use std::{
     time::{Duration, Instant},
 };
 
-use chess_bitboard::{Color, Piece, Pos};
+use chess_bitboard::{Color, Piece};
 use chess_movegen::{Board, ChessMove};
+use owo_colors::OwoColorize as _;
 use score::Score;
 
 #[derive(Default)]
@@ -72,7 +73,7 @@ impl Policy for White {
 
     #[inline]
     fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool {
-        if *alpha < score {
+        if *alpha <= score {
             *alpha = score;
             score > *beta
         } else {
@@ -94,7 +95,7 @@ impl Policy for Black {
 
     #[inline]
     fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool {
-        if *beta > score {
+        if *beta >= score {
             *beta = score;
             score < *alpha
         } else {
@@ -232,6 +233,7 @@ impl Engine {
                 break;
             }
 
+            tracing::trace!(depth = state.depth, "finish depth");
             state.depth += 1;
         }
 
@@ -244,6 +246,7 @@ impl Engine {
         state: &mut SearchState<'_>,
         timeout: T,
     ) {
+        tracing::trace!(chess_move=?mv, "{}", "consider".bright_yellow());
         if timeout.is_complete() {
             return;
         }
@@ -331,7 +334,7 @@ impl Engine {
             list.add(&board)
         };
 
-        if list.count == 3 || self.insuffient_material(&board) {
+        if list.count == 3 || (was_capture && self.insuffient_material(&board)) {
             return Score::Raw(0);
         }
 
@@ -362,6 +365,8 @@ impl Engine {
             P::WORST_SCORE
         };
 
+        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "start".yellow());
+
         for mv in moves {
             if timeout.is_complete() {
                 break;
@@ -379,16 +384,22 @@ impl Engine {
             );
 
             if !P::is_better(score, new) {
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, ?new, "{}", "not better".bright_red());
                 continue;
             }
 
             score = new;
 
             if P::update_cutoff(&mut alpha, &mut beta, new) {
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, ?new, "{}", "cutoff".bright_green());
                 *self.cutoffs.entry(depth).or_default() += 1;
                 break;
+            } else {
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, ?new, "{}", "better".bright_cyan());
             }
         }
+
+        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "eval".bright_blue());
 
         score
     }
@@ -432,8 +443,8 @@ impl Engine {
                     // minimize the distance to the
                     black_score -= (dist as i32) * 100;
                     // penalized for staying close to the edge
-                    white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
-                    black_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
+                    white_score -= DIST_FROM_CENTER[white_king] as i32 * 100;
+                    // black_score -= DIST_FROM_CENTER[black_king] as i32 * 30;
                 }
             }
             std::cmp::Ordering::Equal => (),
@@ -447,7 +458,7 @@ impl Engine {
                     // minimize the distance to the
                     white_score -= (dist as i32) * 100;
                     // penalized for staying close to the edge
-                    white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
+                    // white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
                     black_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
                 }
             }

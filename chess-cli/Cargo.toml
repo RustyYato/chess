@@ -16,3 +16,9 @@ path = '../chess-engine'
 
 [dependencies.chess]
 workspace = true
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.tracing-subscriber]
+workspace = true

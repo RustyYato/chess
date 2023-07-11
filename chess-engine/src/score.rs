@@ -1,10 +1,34 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use owo_colors::OwoColorize;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Score {
     Min,
     BlackMateIn(u16),
     Raw(i16),
     WhiteMateIn(u16),
     Max,
+}
+
+impl core::fmt::Debug for Score {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if f.sign_plus() {
+            return match self {
+                Self::Min => write!(f, "Min"),
+                Self::BlackMateIn(arg0) => f.debug_tuple("BlackMateIn").field(arg0).finish(),
+                Self::Raw(arg0) => {
+                    if *arg0 == 0 {
+                        write!(f, "Raw(0)")
+                    } else {
+                        f.debug_tuple("Raw").field(arg0).finish()
+                    }
+                }
+                Self::WhiteMateIn(arg0) => f.debug_tuple("WhiteMateIn").field(arg0).finish(),
+                Self::Max => write!(f, "Max"),
+            };
+        }
+
+        write!(f, "{:+?}", self.bright_yellow())
+    }
 }
 
 const _: [(); core::mem::size_of::<Score>()] = [(); 4];
