@@ -210,13 +210,14 @@ impl Engine {
         }
 
         unsafe { state.current.move_unchecked_into(mv, &mut state.next_board) }
-        let new: Score = self.search_to::<P, T>(
+        let new = self.search_to::<P, T>(
             &state.next_board,
             state.depth,
             0,
             state.alpha,
             state.beta,
             timeout,
+            state.current.raw().get(mv.dest).is_some(),
         );
 
         if P::is_better(state.score, new) {
@@ -227,6 +228,46 @@ impl Engine {
         }
     }
 
+    fn search_captures<P: Policy, T: Timeout + Copy>(
+        &mut self,
+        board: &Board,
+        mut alpha: Score,
+        mut beta: Score,
+        timeout: T,
+    ) -> Score {
+        let mut moves = board.legals();
+
+        let mut score = P::WORST_SCORE;
+        let mut next_board = Board::standard();
+
+        moves.set_mask(board[!board.turn()]);
+
+        if moves.len() == 0 {
+            return self.eval(board);
+        }
+
+        for mv in moves {
+            if timeout.is_complete() {
+                break;
+            }
+
+            unsafe { board.move_unchecked_into(mv, &mut next_board) }
+            let new = self.search_captures::<P::Flip, T>(&next_board, alpha, beta, timeout);
+
+            if !P::is_better(score, new) {
+                continue;
+            }
+
+            score = new;
+
+            if P::update_cutoff(&mut alpha, &mut beta, new) {
+                break;
+            }
+        }
+
+        score
+    }
+
     fn search_to<P: Policy, T: Timeout + Copy>(
         &mut self,
         board: &Board,
@@ -235,6 +276,7 @@ impl Engine {
         mut alpha: Score,
         mut beta: Score,
         timeout: T,
+        was_capture: bool,
     ) -> Score {
         let moves = board.legals();
 
@@ -252,10 +294,18 @@ impl Engine {
         }
 
         if depth == 0 {
-            return self.eval(board);
+            return if was_capture {
+                self.search_captures::<P, T>(board, alpha, beta, timeout)
+            } else {
+                self.eval(board)
+            };
         }
 
-        let mut score = P::WORST_SCORE;
+        let mut score = if was_capture {
+            self.search_captures::<P, T>(board, alpha, beta, timeout)
+        } else {
+            P::WORST_SCORE
+        };
         let mut next_board = Board::standard();
 
         for mv in moves {
@@ -271,6 +321,7 @@ impl Engine {
                 alpha,
                 beta,
                 timeout,
+                board.raw().get(mv.dest).is_some(),
             );
 
             if !P::is_better(score, new) {
