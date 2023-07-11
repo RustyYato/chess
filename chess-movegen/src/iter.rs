@@ -151,18 +151,19 @@ impl Iterator for MoveGen {
         if legal.promotion {
             let &promotion = self.promotions.next().unwrap();
 
-            let mut moves = legal.moves;
+            let mut moves = legal.moves & self.mask;
+            let dest = unsafe { moves.pop_unchecked() };
 
             let result = ChessMove {
                 source: legal.src,
-                dest: unsafe { moves.pop_unchecked() },
+                dest,
                 promotion: Some(promotion),
             };
 
             if self.promotions.len() == 0 {
                 self.promotions = PROMOTION_PIECES.iter();
 
-                legal.moves = moves;
+                legal.moves.clear(dest);
 
                 if (moves & self.mask).none() {
                     self.index += 1;
@@ -171,13 +172,17 @@ impl Iterator for MoveGen {
 
             Some(result)
         } else {
+            let mut possible_moves = legal.moves & self.mask;
+            let dest = unsafe { possible_moves.pop_unchecked() };
+            legal.moves.clear(dest);
+
             let result = ChessMove {
                 source: legal.src,
-                dest: unsafe { legal.moves.pop_unchecked() },
+                dest,
                 promotion: None,
             };
 
-            if (legal.moves & self.mask).none() {
+            if possible_moves.none() {
                 self.index += 1;
             }
 
