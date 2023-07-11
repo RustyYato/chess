@@ -59,10 +59,11 @@ fn main() {
         .map_event_format(CurrentDepthTabs)
         .with_max_level(
             std::env::var("RUST_LOG")
-                .map(|level| level.parse::<Level>())
+                .map(|level| level.parse::<LevelFilter>())
                 .ok()
                 .transpose()
-                .expect("Invalid level"),
+                .expect("Invalid level")
+                .unwrap_or(LevelFilter::OFF),
         )
         .with_writer(std::io::stderr)
         .init();
