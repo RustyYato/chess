@@ -1,9 +1,6 @@
 mod score;
 
-use std::{
-    collections::BTreeMap,
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 use chess_bitboard::{Color, Piece};
 use chess_movegen::{Board, ChessMove};
@@ -13,7 +10,6 @@ use score::Score;
 #[derive(Default)]
 pub struct Engine {
     pub moves_evaluated: u64,
-    pub cutoffs: BTreeMap<u16, u64>,
 }
 
 pub struct DurationTimeout {
@@ -170,7 +166,6 @@ impl Engine {
         let moves = board.legals();
 
         self.moves_evaluated = 0;
-        self.cutoffs.clear();
 
         let mut state = SearchState {
             board,
@@ -230,6 +225,7 @@ impl Engine {
             // eprintln!("{:?}\t{:?}", state.score, self.cutoffs.last_entry());
 
             if timeout.is_complete() {
+                tracing::trace!(depth = state.depth, "{}", "timeout".bright_red());
                 break;
             }
 
@@ -246,11 +242,12 @@ impl Engine {
         state: &mut SearchState<'_>,
         timeout: T,
     ) {
-        tracing::trace!(chess_move=?mv, "{}", "consider".bright_yellow());
         if timeout.is_complete() {
+            tracing::trace!(chess_move=?mv, "{}", "timeout".bright_red());
             return;
         }
 
+        tracing::trace!(chess_move=?mv, "{}", "consider".bright_yellow());
         let new = self.search_to::<P, T>(
             state.board,
             mv,
@@ -319,6 +316,7 @@ impl Engine {
         list: BoardList<'_>,
         timeout: T,
     ) -> Score {
+        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, chess_move=?mv, "{}", "start".yellow());
         let was_capture = prev_board.raw().get(mv.dest).is_some();
         let board = unsafe { prev_board.move_unchecked(mv) };
         let moves = board.legals();
@@ -335,11 +333,13 @@ impl Engine {
         };
 
         if list.count == 3 || (was_capture && self.insuffient_material(&board)) {
+            tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "draw (reps/material)".yellow());
             return Score::Raw(0);
         }
 
         if moves.len() == 0 {
             return if board.in_check() {
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "mate".yellow());
                 // if white has no moves, and is in check
                 // then black mated them and vice versa
                 match P::COLOR {
@@ -347,15 +347,20 @@ impl Engine {
                     Color::Black => Score::BlackMateIn(current_depth),
                 }
             } else {
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "draw (moves)".yellow());
                 Score::Raw(0)
             };
         }
 
         if depth == 0 {
             return if was_capture {
-                self.search_captures::<P, T>(&board, alpha, beta, timeout)
+                let score = self.search_captures::<P, T>(&board, alpha, beta, timeout);
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "eval captures".yellow());
+                score
             } else {
-                self.eval(&board)
+                let score = self.eval(&board);
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "eval".yellow());
+                score
             };
         }
 
@@ -365,10 +370,9 @@ impl Engine {
             P::WORST_SCORE
         };
 
-        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "start".yellow());
-
         for mv in moves {
             if timeout.is_complete() {
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "timeout".bright_red());
                 break;
             }
 
@@ -388,18 +392,18 @@ impl Engine {
                 continue;
             }
 
+            let old_score = score;
             score = new;
 
             if P::update_cutoff(&mut alpha, &mut beta, new) {
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, ?new, "{}", "cutoff".bright_green());
-                *self.cutoffs.entry(depth).or_default() += 1;
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, score=?old_score, ?new, "{}", "cutoff".bright_green());
                 break;
             } else {
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, ?new, "{}", "better".bright_cyan());
+                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, score=?old_score, ?new, "{}", "better".bright_cyan());
             }
         }
 
-        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "eval".bright_blue());
+        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "search eval".bright_blue());
 
         score
     }

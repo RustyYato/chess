@@ -2,7 +2,7 @@ use std::{collections::HashMap, time::Duration};
 
 use chess_engine::{DurationTimeout, Engine};
 use chess_movegen::Board;
-use tracing::{field::Visit, metadata::LevelFilter, Event};
+use tracing::{field::Visit, metadata::LevelFilter, Event, Level};
 use tracing_subscriber::{
     field::RecordFields,
     fmt::{FormatEvent, FormatFields},
@@ -57,7 +57,13 @@ impl<F: for<'a> FormatFields<'a> + 'static, N: FormatEvent<Registry, F>> FormatE
 fn main() {
     tracing_subscriber::fmt()
         .map_event_format(CurrentDepthTabs)
-        .with_max_level(LevelFilter::TRACE)
+        .with_max_level(
+            std::env::var("RUST_LOG")
+                .map(|level| level.parse::<Level>())
+                .ok()
+                .transpose()
+                .expect("Invalid level"),
+        )
         .with_writer(std::io::stderr)
         .init();
     let mut engine = Engine::default();
