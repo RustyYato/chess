@@ -5,7 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use chess_bitboard::{Color, Piece};
+use chess_bitboard::{Color, Piece, Pos};
 use chess_movegen::{Board, ChessMove};
 use score::Score;
 
@@ -144,7 +144,7 @@ impl Engine {
         };
 
         loop {
-            eprintln!("depth = {}", state.depth);
+            // eprintln!("depth = {}", state.depth);
             let mut moves = moves.clone();
 
             state.score = P::WORST_SCORE;
@@ -152,9 +152,13 @@ impl Engine {
             state.beta = Score::Max;
 
             if let Some(best_mv) = state.best_mv {
-                eprintln!("best {best_mv:?}");
+                // eprintln!("best {best_mv:?}");
                 moves.remove_move(best_mv);
-                self.search_root_move::<P, _>(best_mv, &mut state, timeout)
+                // extend the search for the best move by one
+                // so we can eliminate it if it goes wrong in the future
+                state.depth += 1;
+                self.search_root_move::<P, _>(best_mv, &mut state, timeout);
+                state.depth -= 1
             }
 
             let opp = board[!P::COLOR];
@@ -185,7 +189,7 @@ impl Engine {
                 self.search_root_move::<P, _>(mv, &mut state, timeout)
             }
 
-            eprintln!("{:?}\t{:?}", state.score, self.cutoffs.last_entry());
+            // eprintln!("{:?}\t{:?}", state.score, self.cutoffs.last_entry());
 
             if timeout.is_complete() {
                 break;

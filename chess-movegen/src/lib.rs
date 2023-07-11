@@ -111,8 +111,10 @@ impl core::fmt::Debug for Board {
         }
         f.write_str("\ncastle rights: ")?;
         self.castle_rights.fmt(f)?;
-        f.write_str("\nzobrist: ")?;
+        f.write_str("\nmove zobrist: ")?;
         self.zobrist.fmt(f)?;
+        f.write_str("\nzobrist: ")?;
+        self.zobrist().fmt(f)?;
         f.write_str("\nboard:\n")?;
         if f.alternate() {
             self.raw.fmt(f)?;
