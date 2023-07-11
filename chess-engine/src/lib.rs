@@ -151,6 +151,10 @@ impl Engine {
         board: &Board,
         timeout: &(impl Timeout + ?Sized),
     ) -> (Option<ChessMove>, Score) {
+        if self.insuffient_material(board) {
+            return (None, Score::Raw(0));
+        }
+
         match board.turn() {
             chess_bitboard::Color::White => self.search_::<White, _>(board, timeout),
             chess_bitboard::Color::Black => self.search_::<Black, _>(board, timeout),
@@ -327,7 +331,7 @@ impl Engine {
             list.add(&board)
         };
 
-        if list.count == 3 {
+        if list.count == 3 || self.insuffient_material(&board) {
             return Score::Raw(0);
         }
 
@@ -389,6 +393,22 @@ impl Engine {
         score
     }
 
+    fn insuffient_material(&self, board: &Board) -> bool {
+        let board = board.raw();
+
+        let queens_or_rooks_or_pawns =
+            board[Piece::Queen] | board[Piece::Rook] | board[Piece::Pawn];
+
+        if queens_or_rooks_or_pawns.any() {
+            return false;
+        }
+
+        let bishops = board[Piece::Bishop].count();
+        let knights = board[Piece::Knight].count();
+
+        knights <= 1 && bishops == 0 || knights == 0 && bishops <= 1
+    }
+
     fn eval(&mut self, board: &Board) -> Score {
         self.moves_evaluated += 1;
 
@@ -412,7 +432,8 @@ impl Engine {
                     // minimize the distance to the
                     black_score -= (dist as i32) * 100;
                     // penalized for staying close to the edge
-                    white_score -= DIST_FROM_CENTER[white_king] as i32 * 100;
+                    white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
+                    black_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
                 }
             }
             std::cmp::Ordering::Equal => (),
@@ -426,6 +447,7 @@ impl Engine {
                     // minimize the distance to the
                     white_score -= (dist as i32) * 100;
                     // penalized for staying close to the edge
+                    white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
                     black_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
                 }
             }
