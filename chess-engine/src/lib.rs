@@ -73,11 +73,11 @@ impl Policy for White {
 
     #[inline]
     fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool {
-        if *alpha <= score {
-            *alpha = score;
-            score > *beta
-        } else {
+        if score > *beta {
             true
+        } else {
+            *alpha = score.min(*alpha);
+            false
         }
     }
 }
@@ -95,11 +95,11 @@ impl Policy for Black {
 
     #[inline]
     fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool {
-        if *beta >= score {
-            *beta = score;
-            score < *alpha
-        } else {
+        if score < *alpha {
             true
+        } else {
+            *beta = score.min(*beta);
+            false
         }
     }
 }
