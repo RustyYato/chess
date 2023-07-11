@@ -104,8 +104,7 @@ impl Policy for Black {
 }
 
 struct SearchState<'a> {
-    current: &'a Board,
-    next_board: Board,
+    board: &'a Board,
     best_mv: Option<ChessMove>,
     score: Score,
     alpha: Score,
@@ -136,8 +135,7 @@ impl Engine {
         self.cutoffs.clear();
 
         let mut state = SearchState {
-            current: board,
-            next_board: Board::standard(),
+            board,
             score: P::WORST_SCORE,
             alpha: Score::Min,
             beta: Score::Max,
@@ -209,15 +207,14 @@ impl Engine {
             return;
         }
 
-        unsafe { state.current.move_unchecked_into(mv, &mut state.next_board) }
         let new = self.search_to::<P, T>(
-            &state.next_board,
+            state.board,
+            mv,
             state.depth,
             0,
             state.alpha,
             state.beta,
             timeout,
-            state.current.raw().get(mv.dest).is_some(),
         );
 
         if P::is_better(state.score, new) {
@@ -268,14 +265,16 @@ impl Engine {
 
     fn search_to<P: Policy, T: Timeout + Copy>(
         &mut self,
-        board: &Board,
+        prev_board: &Board,
+        mv: ChessMove,
         depth: u16,
         current_depth: u16,
         mut alpha: Score,
         mut beta: Score,
         timeout: T,
-        was_capture: bool,
     ) -> Score {
+        let was_capture = prev_board.raw().get(mv.dest).is_some();
+        let board = unsafe { prev_board.move_unchecked(mv) };
         let moves = board.legals();
 
         if moves.len() == 0 {
@@ -293,33 +292,31 @@ impl Engine {
 
         if depth == 0 {
             return if was_capture {
-                self.search_captures::<P, T>(board, alpha, beta, timeout)
+                self.search_captures::<P, T>(&board, alpha, beta, timeout)
             } else {
-                self.eval(board)
+                self.eval(&board)
             };
         }
 
         let mut score = if was_capture {
-            self.search_captures::<P, T>(board, alpha, beta, timeout)
+            self.search_captures::<P, T>(&board, alpha, beta, timeout)
         } else {
             P::WORST_SCORE
         };
-        let mut next_board = Board::standard();
 
         for mv in moves {
             if timeout.is_complete() {
                 break;
             }
 
-            unsafe { board.move_unchecked_into(mv, &mut next_board) }
             let new = self.search_to::<P::Flip, T>(
-                &next_board,
+                &board,
+                mv,
                 depth - 1,
                 current_depth + 1,
                 alpha,
                 beta,
                 timeout,
-                board.raw().get(mv.dest).is_some(),
             );
 
             if !P::is_better(score, new) {
