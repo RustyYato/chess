@@ -22,8 +22,12 @@ fn main() {
 
         // let start = std::time::Instant::now();
         let (mv, score) = engine.search(&board, &DurationTimeout::new(Duration::from_millis(100)));
+
+        let Some(mv) = mv else {
+            println!("DRAW (MATERIAL)");
+            break;
+        };
         // dbg!(start.elapsed());
-        let mv = mv.unwrap();
         assert!(board.move_mut(mv));
         eprintln!("{score:?} {mv:?} moves: {}", engine.moves_evaluated);
 
