@@ -235,12 +235,10 @@ impl Engine {
         mut beta: Score,
         timeout: T,
     ) -> Score {
-        let mut moves = board.legals();
+        let moves = board.legals_masked(board[!board.turn()]);
 
         let mut score = P::WORST_SCORE;
         let mut next_board = Board::standard();
-
-        moves.set_mask(board[!board.turn()]);
 
         if moves.len() == 0 {
             return self.eval(board);

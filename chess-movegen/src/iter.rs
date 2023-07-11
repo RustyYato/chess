@@ -34,18 +34,27 @@ struct LegalMovesAt {
 impl Board {
     pub fn legals(&self) -> MoveGen {
         MoveGen {
-            moves: self.collect_moves(),
+            moves: self.collect_moves(!BitBoard::empty()),
             promotions: PROMOTION_PIECES.iter(),
             mask: !BitBoard::empty(),
             index: 0,
         }
     }
 
-    fn collect_moves(&self) -> MoveList {
+    pub fn legals_masked(&self, mask: BitBoard) -> MoveGen {
+        MoveGen {
+            moves: self.collect_moves(mask),
+            promotions: PROMOTION_PIECES.iter(),
+            mask,
+            index: 0,
+        }
+    }
+
+    fn collect_moves(&self, mask: BitBoard) -> MoveList {
         let mut moves = MoveList::default();
         let movelist = &mut moves;
 
-        let mask = !self.raw[self.turn];
+        let mask = !self.raw[self.turn] & mask;
 
         if self.checkers.none() {
             Pawn::legals::<NO_CHECK>(movelist, self, mask);
