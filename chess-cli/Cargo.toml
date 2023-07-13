@@ -22,3 +22,10 @@ workspace = true
 
 [dependencies.tracing-subscriber]
 workspace = true
+
+[dependencies.colorz]
+version = '1'
+features = ['supports-color', 'std']
+
+[dependencies.chrono]
+version = '0.4'

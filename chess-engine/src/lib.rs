@@ -4,12 +4,13 @@ use std::time::{Duration, Instant};
 
 use chess_bitboard::{Color, Piece};
 use chess_movegen::{Board, ChessMove};
-use owo_colors::OwoColorize as _;
+use colorz::Colorize as _;
 use score::Score;
 
 #[derive(Default)]
 pub struct Engine {
     pub moves_evaluated: u64,
+    pub max_depth: u16,
 }
 
 pub struct DurationTimeout {
@@ -230,6 +231,7 @@ impl Engine {
             }
 
             tracing::trace!(depth = state.depth, "finish depth");
+            self.max_depth = state.depth;
             state.depth += 1;
         }
 
@@ -270,6 +272,7 @@ impl Engine {
     fn search_captures<P: Policy, T: Timeout + Copy>(
         &mut self,
         board: &Board,
+        current_depth: u16,
         mut alpha: Score,
         mut beta: Score,
         timeout: T,
@@ -280,7 +283,7 @@ impl Engine {
         let mut next_board = Board::standard();
 
         if moves.len() == 0 {
-            return self.eval(board);
+            return self.eval(board, current_depth);
         }
 
         for mv in moves {
@@ -289,7 +292,13 @@ impl Engine {
             }
 
             unsafe { board.move_unchecked_into(mv, &mut next_board) }
-            let new = self.search_captures::<P::Flip, T>(&next_board, alpha, beta, timeout);
+            let new = self.search_captures::<P::Flip, T>(
+                &next_board,
+                current_depth + 1,
+                alpha,
+                beta,
+                timeout,
+            );
 
             if !P::is_better(score, new) {
                 continue;
@@ -332,8 +341,8 @@ impl Engine {
             list.add(&board)
         };
 
+        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "draw (reps/material)".yellow());
         if list.count == 3 || (was_capture && self.insuffient_material(&board)) {
-            tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "draw (reps/material)".yellow());
             return Score::Raw(0);
         }
 
@@ -354,18 +363,19 @@ impl Engine {
 
         if depth == 0 {
             return if was_capture {
-                let score = self.search_captures::<P, T>(&board, alpha, beta, timeout);
+                let score =
+                    self.search_captures::<P, T>(&board, current_depth, alpha, beta, timeout);
                 tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "eval captures".yellow());
                 score
             } else {
-                let score = self.eval(&board);
+                let score = self.eval(&board, current_depth);
                 tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "eval".yellow());
                 score
             };
         }
 
         let mut score = if was_capture {
-            self.search_captures::<P, T>(&board, alpha, beta, timeout)
+            self.search_captures::<P, T>(&board, current_depth, alpha, beta, timeout)
         } else {
             P::WORST_SCORE
         };
@@ -424,53 +434,62 @@ impl Engine {
         knights <= 1 && bishops == 0 || knights == 0 && bishops <= 1
     }
 
-    fn eval(&mut self, board: &Board) -> Score {
+    fn eval(&mut self, board: &Board, current_depth: u16) -> Score {
         self.moves_evaluated += 1;
 
         if board.half_move_clock() >= 100 {
             return Score::Raw(0);
         }
 
-        let mut white_score = self.score_pieces(board, Color::White);
-        let mut black_score = self.score_pieces(board, Color::Black);
+        let white_piece_score = self.score_pieces(board, Color::White);
+        let black_piece_score = self.score_pieces(board, Color::Black);
 
-        let piece_score = white_score - black_score;
+        let piece_score = white_piece_score - black_piece_score;
+
+        let mut white_endgame_score = 0;
+        let mut black_endgame_score = 0;
 
         match piece_score.cmp(&0) {
             std::cmp::Ordering::Less => {
-                if black_score < 800 + 500 * 3 {
+                if black_piece_score < 800 + 500 * 3 {
                     // if we are in the endgame
                     let white_king = board.king_sq(Color::White);
                     let black_king = board.king_sq(Color::Black);
 
                     let dist = chess_lookup::distance(white_king, black_king);
                     // minimize the distance to the
-                    black_score -= (dist as i32) * 100;
+                    black_endgame_score -= (dist as i32) * 1000;
                     // penalized for staying close to the edge
-                    white_score -= DIST_FROM_CENTER[white_king] as i32 * 100;
-                    // black_score -= DIST_FROM_CENTER[black_king] as i32 * 30;
+                    white_endgame_score -= DIST_FROM_CENTER[white_king] as i32 * 100;
+                    // black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 30;
                 }
             }
             std::cmp::Ordering::Equal => (),
             std::cmp::Ordering::Greater => {
-                if white_score < 800 + 500 * 3 {
+                if white_piece_score < 800 + 500 * 3 {
                     // if we are in the endgame
                     let white_king = board.king_sq(Color::White);
                     let black_king = board.king_sq(Color::Black);
 
                     let dist = chess_lookup::distance(white_king, black_king);
+                    tracing::trace!(current_depth, ?dist);
                     // minimize the distance to the
-                    white_score -= (dist as i32) * 100;
+                    white_endgame_score -= (dist as i32) * (dist as i32) * 1000;
                     // penalized for staying close to the edge
                     // white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
-                    black_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
+                    black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
                 }
             }
         }
 
+        let white_score = white_piece_score * 100 + white_endgame_score;
+        let black_score = black_piece_score * 100 + black_endgame_score;
+
+        tracing::trace!(current_depth, ?white_score, ?black_score);
+
         let piece_score = white_score - black_score;
 
-        Score::Raw(piece_score.try_into().unwrap())
+        Score::Raw(piece_score)
     }
 
     fn score_pieces(&mut self, board: &Board, color: Color) -> i32 {

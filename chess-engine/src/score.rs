@@ -1,10 +1,10 @@
-use owo_colors::OwoColorize;
+use colorz::Colorize;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Score {
     Min,
     BlackMateIn(u16),
-    Raw(i16),
+    Raw(i32),
     WhiteMateIn(u16),
     Max,
 }
@@ -31,7 +31,7 @@ impl core::fmt::Debug for Score {
     }
 }
 
-const _: [(); core::mem::size_of::<Score>()] = [(); 4];
+const _: [(); core::mem::size_of::<Score>()] = [(); 8];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ScoreKind {
@@ -83,9 +83,9 @@ fn test_score_order() {
     assert!(Score::BlackMateIn(1) < Score::BlackMateIn(3));
     assert!(Score::WhiteMateIn(1) > Score::WhiteMateIn(3));
 
-    assert!(Score::Raw(i16::MAX) < Score::WhiteMateIn(3));
+    assert!(Score::Raw(i32::MAX) < Score::WhiteMateIn(3));
     assert!(Score::Raw(100) > Score::Raw(3));
 
-    assert!(Score::Raw(i16::MIN) > Score::BlackMateIn(3));
+    assert!(Score::Raw(i32::MIN) > Score::BlackMateIn(3));
     assert!(Score::Raw(-100) < Score::Raw(-3));
 }

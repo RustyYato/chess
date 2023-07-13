@@ -20,5 +20,5 @@ version = '0.7'
 [dependencies.tracing]
 workspace = true
 
-[dependencies.owo-colors]
-version = '3'
+[dependencies.colorz]
+version = '1'
