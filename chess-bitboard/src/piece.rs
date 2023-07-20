@@ -1,4 +1,7 @@
-use core::ops::{Index, IndexMut, Range};
+use core::{
+    fmt::{Display, Write},
+    ops::{Index, IndexMut, Range},
+};
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -108,5 +111,18 @@ impl DoubleEndedIterator for AllPieceIter {
     #[inline]
     fn nth_back(&mut self, n: usize) -> Option<Self::Item> {
         Some(Piece::from_u8(self.range.nth_back(n)?).unwrap())
+    }
+}
+
+impl Display for PromotionPiece {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let c = match self {
+            PromotionPiece::Knight => 'N',
+            PromotionPiece::Bishop => 'B',
+            PromotionPiece::Rook => 'R',
+            PromotionPiece::Queen => 'Q',
+        };
+
+        f.write_char(c)
     }
 }

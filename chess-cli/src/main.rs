@@ -168,7 +168,8 @@ fn main() {
         eprintln!("{board:?}");
 
         // let start = std::time::Instant::now();
-        let (mv, score) = engine.search(&board, &DurationTimeout::new(Duration::from_millis(500)));
+        let (mv, score) =
+            engine.search(&board, DurationTimeout::new(Duration::from_secs(1_000_000)));
 
         let Some(mv) = mv else {
             println!("DRAW (MATERIAL)");

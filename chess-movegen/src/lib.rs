@@ -49,6 +49,16 @@ pub struct ChessMove {
     pub promotion: Option<PromotionPiece>,
 }
 
+impl core::fmt::Display for ChessMove {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}-{}", self.source, self.dest)?;
+        if let Some(promotion) = self.promotion {
+            write!(f, "{}", promotion)?
+        }
+        Ok(())
+    }
+}
+
 impl core::fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         static PIECES: [[char; 6]; 2] = [

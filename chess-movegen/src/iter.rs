@@ -95,6 +95,34 @@ impl Board {
 }
 
 impl MoveGen {
+    pub fn is_empty(&self) -> bool {
+        if let [legals, ..] = &self.moves[self.index..] {
+            return (legals.moves & self.mask).none();
+        }
+
+        true
+    }
+
+    pub fn len(&self) -> usize {
+        const NUM_PROMOTION_PIECES: usize = 4;
+
+        let mut len = 0;
+
+        for legals in &self.moves[self.index..] {
+            if (legals.moves & self.mask).none() {
+                break;
+            }
+            let count = (legals.moves & self.mask).count() as usize;
+            len += if legals.promotion {
+                count * NUM_PROMOTION_PIECES
+            } else {
+                count
+            };
+        }
+
+        len
+    }
+
     /// Never move to any position marked in the mask
     pub fn remove(&mut self, mask: BitBoard) {
         for legals in &mut self.moves {
@@ -200,21 +228,8 @@ impl Iterator for MoveGen {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        const NUM_PROMOTION_PIECES: usize = 4;
-
-        let mut result = 0;
-        for legals in &self.moves[self.index..] {
-            if (legals.moves & self.mask).none() {
-                break;
-            }
-            let count = (legals.moves & self.mask).count() as usize;
-            result += if legals.promotion {
-                count * NUM_PROMOTION_PIECES
-            } else {
-                count
-            };
-        }
-        (result, Some(result))
+        let len = self.len();
+        (len, Some(len))
     }
 
     fn count(self) -> usize {

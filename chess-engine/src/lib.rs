@@ -13,6 +13,7 @@ pub struct Engine {
     pub max_depth: u16,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct DurationTimeout {
     deadline: Instant,
 }
@@ -36,6 +37,9 @@ pub trait Timeout {
     fn is_complete(&self) -> bool;
 }
 
+impl<T: Timeout + Copy> TimeoutRef for T {}
+pub trait TimeoutRef: Timeout + Copy {}
+
 impl<T: ?Sized + Timeout> Timeout for &T {
     #[inline]
     fn is_complete(&self) -> bool {
@@ -49,9 +53,11 @@ trait Policy {
     const WORST_SCORE: Score;
     const BEST_SCORE: Score;
 
+    const IS_BETA_CUTOFF: bool = false;
+
     fn is_better(score: Score, new: Score) -> bool;
 
-    fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool;
+    fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score);
 }
 
 struct White;
@@ -60,380 +66,286 @@ struct Black;
 impl Policy for White {
     type Flip = Black;
     const COLOR: Color = Color::White;
+
     const WORST_SCORE: Score = Score::Min;
     const BEST_SCORE: Score = Score::Max;
 
-    #[inline]
+    const IS_BETA_CUTOFF: bool = true;
+
     fn is_better(score: Score, new: Score) -> bool {
         score < new
     }
 
-    #[inline]
-    fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool {
-        if score > *beta {
-            true
-        } else {
-            *alpha = score.min(*alpha);
-            false
-        }
+    fn update_cutoff(alpha: &mut Score, _beta: &mut Score, score: Score) {
+        *alpha = score.max(*alpha)
     }
 }
 
 impl Policy for Black {
     type Flip = White;
     const COLOR: Color = Color::Black;
+
     const WORST_SCORE: Score = Score::Max;
     const BEST_SCORE: Score = Score::Min;
 
-    #[inline]
+    const IS_BETA_CUTOFF: bool = false;
+
     fn is_better(score: Score, new: Score) -> bool {
         score > new
     }
 
-    #[inline]
-    fn update_cutoff(alpha: &mut Score, beta: &mut Score, score: Score) -> bool {
-        if score < *alpha {
-            true
-        } else {
-            *beta = score.min(*beta);
-            false
-        }
+    fn update_cutoff(_alpha: &mut Score, beta: &mut Score, score: Score) {
+        *beta = score.min(*beta)
     }
 }
 
-struct SearchState<'a> {
-    board: &'a Board,
-    best_mv: Option<ChessMove>,
-    score: Score,
+struct AlphaBetaArgs<'a, T> {
+    old_board: &'a Board,
+    mv: ChessMove,
+    timeout: T,
+    remaining_depth: u16,
+    current_depth: u16,
     alpha: Score,
     beta: Score,
-    depth: u16,
-}
-
-#[derive(Clone, Copy)]
-struct BoardList<'a> {
-    prev: Option<&'a BoardList<'a>>,
-    board: &'a Board,
-    count: u8,
-}
-
-impl<'a> BoardList<'a> {
-    pub fn new(board: &'a Board) -> Self {
-        Self {
-            prev: None,
-            board,
-            count: 1,
-        }
-    }
-
-    pub fn add(&'a self, board: &'a Board) -> Self {
-        Self {
-            prev: Some(self),
-            board,
-            count: self.count(board) + 1,
-        }
-    }
-
-    pub fn count(&self, board: &Board) -> u8 {
-        if self.board == board {
-            self.count
-        } else {
-            self.prev.map_or(0, |list| list.count(board))
-        }
-    }
 }
 
 impl Engine {
     pub fn search(
         &mut self,
         board: &Board,
-        timeout: &(impl Timeout + ?Sized),
+        timeout: impl TimeoutRef,
     ) -> (Option<ChessMove>, Score) {
-        if self.insuffient_material(board) {
-            return (None, Score::Raw(0));
-        }
-
         match board.turn() {
-            chess_bitboard::Color::White => self.search_::<White, _>(board, timeout),
-            chess_bitboard::Color::Black => self.search_::<Black, _>(board, timeout),
+            Color::White => self.search_with::<White>(board, timeout),
+            Color::Black => self.search_with::<Black>(board, timeout),
         }
     }
 
-    fn search_<P: Policy, T: Timeout + Copy>(
+    fn search_with<P: Policy>(
         &mut self,
         board: &Board,
-        timeout: T,
+        timeout: impl TimeoutRef,
     ) -> (Option<ChessMove>, Score) {
-        let moves = board.legals();
+        assert_eq!(P::COLOR, board.turn());
 
-        self.moves_evaluated = 0;
+        let mut best_score = P::WORST_SCORE;
+        let mut best_mv = None;
 
-        let mut state = SearchState {
-            board,
-            score: P::WORST_SCORE,
-            alpha: Score::Min,
-            beta: Score::Max,
-            best_mv: None,
-            depth: 1,
-        };
+        let mut depth = 1;
 
         loop {
-            // eprintln!("depth = {}", state.depth);
-            let mut moves = moves.clone();
-
-            state.score = P::WORST_SCORE;
-            state.alpha = Score::Min;
-            state.beta = Score::Max;
-
-            if let Some(best_mv) = state.best_mv {
-                // eprintln!("best {best_mv:?}");
-                moves.remove_move(best_mv);
-                // extend the search for the best move by one
-                // so we can eliminate it if it goes wrong in the future
-                state.depth += 1;
-                self.search_root_move::<P, _>(best_mv, &mut state, timeout);
-                state.depth -= 1
+            if depth > 3 {
+                break;
             }
+            let mut score = P::WORST_SCORE;
+            let mut best_mv_at = None;
 
-            let opp = board[!P::COLOR];
+            for mv in board.legals() {
+                let new = self.alphabeta::<P>(AlphaBetaArgs {
+                    old_board: board,
+                    mv,
+                    timeout,
+                    remaining_depth: depth,
+                    current_depth: 1,
+                    alpha: Score::Min,
+                    beta: Score::Max,
+                });
 
-            for piece in [
-                Piece::Queen,
-                Piece::Rook,
-                Piece::Bishop,
-                Piece::Knight,
-                Piece::Pawn,
-            ] {
-                let opp_pieces = board[piece] & opp;
-
-                if opp_pieces.none() {
-                    continue;
+                if timeout.is_complete() {
+                    break;
                 }
 
-                moves.set_mask(opp_pieces);
-
-                for mv in &mut moves {
-                    self.search_root_move::<P, _>(mv, &mut state, timeout)
+                if P::is_better(score, new) {
+                    score = new;
+                    best_mv_at = Some(mv);
                 }
             }
-
-            moves.set_mask(!chess_bitboard::BitBoard::empty());
-
-            for mv in moves {
-                self.search_root_move::<P, _>(mv, &mut state, timeout)
-            }
-
-            // eprintln!("{:?}\t{:?}", state.score, self.cutoffs.last_entry());
 
             if timeout.is_complete() {
-                tracing::trace!(depth = state.depth, "{}", "timeout".bright_red());
                 break;
             }
 
-            tracing::trace!(depth = state.depth, "finish depth");
-            self.max_depth = state.depth;
-            state.depth += 1;
+            best_mv = best_mv_at;
+            best_score = score;
+            depth += 1;
         }
 
-        (state.best_mv, state.score)
+        (best_mv, best_score)
     }
 
-    fn search_root_move<P: Policy, T: Timeout + Copy>(
-        &mut self,
-        mv: ChessMove,
-        state: &mut SearchState<'_>,
-        timeout: T,
-    ) {
-        if timeout.is_complete() {
-            tracing::trace!(chess_move=?mv, "{}", "timeout".bright_red());
-            return;
-        }
-
-        tracing::trace!(chess_move=?mv, "{}", "consider".bright_yellow());
-        let new = self.search_to::<P, T>(
-            state.board,
-            mv,
-            state.depth,
-            0,
-            state.alpha,
-            state.beta,
-            BoardList::new(state.board),
-            timeout,
+    fn alphabeta<P: Policy>(&mut self, mut args: AlphaBetaArgs<'_, impl TimeoutRef>) -> Score {
+        tracing::trace!(
+            current_depth=args.current_depth,
+            depth=args.remaining_depth,
+            alpha=?args.alpha,
+            beta=?args.beta,
+            "move"=%args.mv,
+            board=%args.old_board,
+            "start alphabeta"
         );
+        let board = unsafe { args.old_board.move_unchecked(args.mv) };
+        let was_capture = args.old_board[!P::COLOR] != board[!P::COLOR];
 
-        if P::is_better(state.score, new) {
-            state.score = new;
-            state.best_mv = Some(mv);
-
-            P::update_cutoff(&mut state.alpha, &mut state.beta, new);
-        }
-    }
-
-    fn search_captures<P: Policy, T: Timeout + Copy>(
-        &mut self,
-        board: &Board,
-        current_depth: u16,
-        mut alpha: Score,
-        mut beta: Score,
-        timeout: T,
-    ) -> Score {
-        let moves = board.legals_masked(board[!board.turn()]);
-
-        let mut score = P::WORST_SCORE;
-        let mut next_board = Board::standard();
-
-        if moves.len() == 0 {
-            return self.eval(board, current_depth);
-        }
-
-        for mv in moves {
-            if timeout.is_complete() {
-                break;
-            }
-
-            unsafe { board.move_unchecked_into(mv, &mut next_board) }
-            let new = self.search_captures::<P::Flip, T>(
-                &next_board,
-                current_depth + 1,
-                alpha,
-                beta,
-                timeout,
+        if was_capture && self.insuffient_material(&board) {
+            tracing::trace!(
+                current_depth=args.current_depth,
+                depth=args.remaining_depth,
+                alpha=?args.alpha,
+                beta=?args.beta,
+                "move"=%args.mv,
+                board=%args.old_board,
+                "{}", "tie (material)".bright_blue()
             );
-
-            if !P::is_better(score, new) {
-                continue;
-            }
-
-            score = new;
-
-            if P::update_cutoff(&mut alpha, &mut beta, new) {
-                break;
-            }
-        }
-
-        score
-    }
-
-    fn search_to<P: Policy, T: Timeout + Copy>(
-        &mut self,
-        prev_board: &Board,
-        mv: ChessMove,
-        depth: u16,
-        current_depth: u16,
-        mut alpha: Score,
-        mut beta: Score,
-        list: BoardList<'_>,
-        timeout: T,
-    ) -> Score {
-        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, chess_move=?mv, "{}", "start".yellow());
-        let was_capture = prev_board.raw().get(mv.dest).is_some();
-        let board = unsafe { prev_board.move_unchecked(mv) };
-        let moves = board.legals();
-
-        let list = if was_capture
-            || prev_board
-                .raw()
-                .get(mv.source)
-                .is_some_and(|(_, piece)| piece == Piece::Pawn)
-        {
-            BoardList::new(&board)
-        } else {
-            list.add(&board)
-        };
-
-        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "draw (reps/material)".yellow());
-        if list.count == 3 || (was_capture && self.insuffient_material(&board)) {
             return Score::Raw(0);
         }
 
-        if moves.len() == 0 {
-            return if board.in_check() {
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "mate".yellow());
-                // if white has no moves, and is in check
-                // then black mated them and vice versa
-                match P::COLOR {
-                    Color::White => Score::WhiteMateIn(current_depth),
-                    Color::Black => Score::BlackMateIn(current_depth),
-                }
+        let moves = board.legals();
+
+        if moves.is_empty() {
+            if board.in_check() {
+                tracing::trace!(
+                    current_depth=args.current_depth,
+                    depth=args.remaining_depth,
+                    alpha=?args.alpha,
+                    beta=?args.beta,
+                    "move"=%args.mv,
+                    board=%args.old_board,
+                    "{}", "mate".bright_blue()
+                );
+                return match P::COLOR {
+                    Color::White => Score::WhiteMateIn(args.current_depth),
+                    Color::Black => Score::BlackMateIn(args.current_depth),
+                };
             } else {
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, "{}", "draw (moves)".yellow());
-                Score::Raw(0)
-            };
-        }
-
-        if depth == 0 {
-            return if was_capture {
-                let score =
-                    self.search_captures::<P, T>(&board, current_depth, alpha, beta, timeout);
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "eval captures".yellow());
-                score
-            } else {
-                let score = self.eval(&board, current_depth);
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "eval".yellow());
-                score
-            };
-        }
-
-        let mut score = if was_capture {
-            self.search_captures::<P, T>(&board, current_depth, alpha, beta, timeout)
-        } else {
-            P::WORST_SCORE
-        };
-
-        for mv in moves {
-            if timeout.is_complete() {
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "timeout".bright_red());
-                break;
+                tracing::trace!(
+                    current_depth=args.current_depth,
+                    depth=args.remaining_depth,
+                    alpha=?args.alpha,
+                    beta=?args.beta,
+                    "move"=%args.mv,
+                    board=%args.old_board,
+                    "{}", "tie (no moves)".bright_blue()
+                );
+                return Score::Raw(0);
             }
+        }
 
-            let new = self.search_to::<P::Flip, T>(
-                &board,
-                mv,
-                depth - 1,
-                current_depth + 1,
-                alpha,
-                beta,
-                list,
-                timeout,
+        if board.half_move_clock() >= 100 {
+            tracing::trace!(
+                current_depth=args.current_depth,
+                depth=args.remaining_depth,
+                alpha=?args.alpha,
+                beta=?args.beta,
+                "move"=%args.mv,
+                board=%args.old_board,
+                "{}", "tie (clock)".bright_blue()
+            );
+            return Score::Raw(0);
+        }
+
+        if args.remaining_depth == 0 {
+            let score = self.eval(&board, args.current_depth);
+
+            tracing::trace!(
+                current_depth=args.current_depth,
+                depth=args.remaining_depth,
+                alpha=?args.alpha,
+                beta=?args.beta,
+                "move"=%args.mv,
+                board=%args.old_board,
+                ?score,
+                "{}", "eval".bright_blue()
             );
 
-            if !P::is_better(score, new) {
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, ?new, "{}", "not better".bright_red());
-                continue;
+            return score;
+        }
+
+        let mut score = P::WORST_SCORE;
+
+        for mv in moves {
+            if args.timeout.is_complete() {
+                break;
             }
 
-            let old_score = score;
-            score = new;
+            let new = self.alphabeta::<P::Flip>(AlphaBetaArgs {
+                old_board: &board,
+                mv,
+                timeout: args.timeout,
+                remaining_depth: args.remaining_depth - 1,
+                current_depth: args.current_depth + 1,
+                alpha: args.alpha,
+                beta: args.beta,
+            });
 
-            if P::update_cutoff(&mut alpha, &mut beta, new) {
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, score=?old_score, ?new, "{}", "cutoff".bright_green());
-                break;
+            let old_score = score;
+            if P::is_better(score, new) {
+                tracing::trace!(
+                    current_depth=args.current_depth,
+                    depth=args.remaining_depth,
+                    alpha=?args.alpha,
+                    beta=?args.beta,
+                    score.old=?old_score,
+                    score.new=?new,
+                    score.current=?score,
+                    "move"=%args.mv,
+                    board=%args.old_board,
+                    "{}",
+                    "better".bright_green()
+                );
+                score = new;
             } else {
-                tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, score=?old_score, ?new, "{}", "better".bright_cyan());
+                tracing::trace!(
+                    current_depth=args.current_depth,
+                    depth=args.remaining_depth,
+                    alpha=?args.alpha,
+                    beta=?args.beta,
+                    score.old=?old_score,
+                    score.new=?new,
+                    score.current=?score,
+                    "move"=%args.mv,
+                    board=%args.old_board,
+                    "{}",
+                    "worse".red()
+                );
+            }
+
+            P::update_cutoff(&mut args.alpha, &mut args.beta, score);
+
+            if args.beta <= args.alpha {
+                tracing::trace!(
+                    current_depth=args.current_depth,
+                    depth=args.remaining_depth,
+                    alpha=?args.alpha,
+                    beta=?args.beta,
+                    score.old=?old_score,
+                    score.new=?new,
+                    score.current=?score,
+                    "move"=%args.mv,
+                    board=%args.old_board,
+                    "{}",
+                    if P::IS_BETA_CUTOFF {
+                        "beta cutoff"
+                    } else {
+                        "alpha cutoff"
+                    }.bright_green()
+                );
+                break;
             }
         }
 
-        tracing::trace!(current_depth, color=?P::COLOR, depth, ?alpha, ?beta, ?score, "{}", "search eval".bright_blue());
+        tracing::trace!(
+            current_depth=args.current_depth,
+            depth=args.remaining_depth,
+            alpha=?args.alpha,
+            beta=?args.beta,
+            ?score,
+            "move"=%args.mv,
+            board=%args.old_board,
+            "finish alpha beta"
+        );
 
         score
     }
-
-    fn insuffient_material(&self, board: &Board) -> bool {
-        let board = board.raw();
-
-        let queens_or_rooks_or_pawns =
-            board[Piece::Queen] | board[Piece::Rook] | board[Piece::Pawn];
-
-        if queens_or_rooks_or_pawns.any() {
-            return false;
-        }
-
-        let bishops = board[Piece::Bishop].count();
-        let knights = board[Piece::Knight].count();
-
-        knights <= 1 && bishops == 0 || knights == 0 && bishops <= 1
-    }
-
     fn eval(&mut self, board: &Board, current_depth: u16) -> Score {
         self.moves_evaluated += 1;
 
@@ -502,6 +414,22 @@ impl Engine {
         let my_pawn_score = (my_pieces & board[Piece::Pawn]).count() as i32 * 100;
 
         my_queen_score + my_rook_score + my_bishop_score + my_knight_score + my_pawn_score
+    }
+
+    fn insuffient_material(&self, board: &Board) -> bool {
+        let board = board.raw();
+
+        let queens_or_rooks_or_pawns =
+            board[Piece::Queen] | board[Piece::Rook] | board[Piece::Pawn];
+
+        if queens_or_rooks_or_pawns.any() {
+            return false;
+        }
+
+        let bishops = board[Piece::Bishop].count();
+        let knights = board[Piece::Knight].count();
+
+        knights <= 1 && bishops == 0 || knights == 0 && bishops <= 1
     }
 }
 

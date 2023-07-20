@@ -111,6 +111,16 @@ impl File {
     }
 
     #[inline(always)]
+    pub const fn lower_letter(self) -> char {
+        (b'a' + self as u8 ) as char
+    }
+
+    #[inline(always)]
+    pub const fn upper_letter(self) -> char {
+        (b'A' + self as u8 ) as char
+    }
+
+    #[inline(always)]
     pub const fn to_u8(self) -> u8 {
         self as u8
     }
@@ -133,7 +143,6 @@ impl File {
             Side::King
         }
     }
-
 }
 
 impl Rank {
@@ -379,5 +388,23 @@ impl<T> core::ops::IndexMut<Rank> for [T; 8] {
     #[inline]
     fn index_mut(&mut self, index: Rank) -> &mut Self::Output {
         &mut self[index as usize]
+    }
+}
+
+impl core::fmt::Display for Pos {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}{}", self.file(), self.rank())
+    }
+}
+
+impl core::fmt::Display for File {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", self .lower_letter())
+    }
+}
+
+impl core::fmt::Display for Rank {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}", *self as u8 + 1)
     }
 }
