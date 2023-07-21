@@ -340,6 +340,11 @@ impl Engine {
             best_score = score;
             self.max_depth = depth;
             depth += 1;
+
+            match score {
+                Score::BlackMateIn(_) | Score::WhiteMateIn(_) => break,
+                _ => (),
+            }
         }
 
         (best_mv, best_score)
