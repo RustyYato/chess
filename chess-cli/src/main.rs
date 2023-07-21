@@ -158,10 +158,10 @@ fn main() {
 
     let mut engine = Engine::default();
 
-    let board = "6k1/8/8/8/8/8/8/R6K w - - 0 1";
+    // let board = "6k1/8/8/8/8/8/8/R6K w - - 0 1";
     // let board = "5k2/Q7/5K2/8/8/8/8/8 w - - 8 5";
     // let board = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0";
-    // let board = "r3k2r/p1ppqpb1/Bn2pnp1/3PN3/4P3/2p2Q1p/PPPB1PPP/R3K2R w KQkq - 0 1";
+    let board = "r3k2r/p1ppqpb1/Bn2pnp1/3PN3/4P3/2p2Q1p/PPPB1PPP/R3K2R w KQkq - 0 1";
     // let board = "2k5/8/2K5/8/8/8/6R1/8 w - - 0 1";
     // let board = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 0";
 
@@ -177,7 +177,7 @@ fn main() {
         let (mv, score) = engine.search(
             &board,
             &three_fold,
-            DurationTimeout::new(Duration::from_millis(500)),
+            DurationTimeout::new(Duration::from_millis(5000)),
         );
 
         let Some(mv) = mv else {
@@ -190,7 +190,6 @@ fn main() {
             "{score:?} {mv} moves: {}, max_depth: {}",
             engine.moves_evaluated, engine.max_depth
         );
-        assert_ne!(score, Score::Raw(0));
 
         if three_fold.add(board) {
             println!("DRAW (THREE FOLD)");

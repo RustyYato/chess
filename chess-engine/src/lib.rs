@@ -5,7 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use chess_bitboard::{Color, Piece};
+use chess_bitboard::{BitBoard, Color, Piece};
 use chess_movegen::{Board, ChessMove};
 use colorz::Colorize as _;
 pub use score::Score;
@@ -256,7 +256,7 @@ impl Engine {
             let mut score = P::WORST_SCORE;
             let mut best_mv_at = None;
 
-            let args = AlphaBetaArgs {
+            let mut args = AlphaBetaArgs {
                 old_board: board,
                 timeout,
                 remaining_depth: depth,
@@ -266,8 +266,11 @@ impl Engine {
                 list: BoardList::new(board, three_fold),
             };
 
-            for mv in board.legals() {
-                tracing::debug!(color = ?P::COLOR, depth, "move"=%mv, board=%board, "consider move");
+            let mut moves = board.legals();
+
+            if let Some(mv) = best_mv {
+                tracing::debug!("Consider previous best move");
+                moves.remove_move(mv);
 
                 let new = self.alphabeta::<P::Flip>(mv, &args);
 
@@ -280,6 +283,52 @@ impl Engine {
                     best_mv_at = Some(mv);
                     tracing::debug!(color = ?P::COLOR, depth, "move"=%mv, board=%board, ?score, "{}", "better".bright_green());
                 }
+
+                P::update_cutoff(&mut args.alpha, &mut args.beta, score)
+            }
+
+            // iterate over captures first
+            moves.set_mask(board[!P::COLOR]);
+
+            if !moves.is_empty() {
+                tracing::debug!("Consider captures");
+            }
+
+            for mv in &mut moves {
+                let new = self.alphabeta::<P::Flip>(mv, &args);
+
+                if timeout.is_complete() {
+                    break;
+                }
+
+                if P::is_better(score, new) {
+                    score = new;
+                    best_mv_at = Some(mv);
+                    tracing::debug!(color = ?P::COLOR, depth, "move"=%mv, board=%board, ?score, "{}", "better".bright_green());
+                }
+
+                P::update_cutoff(&mut args.alpha, &mut args.beta, score)
+            }
+
+            tracing::debug!("Consider normal moves");
+
+            // clear mask
+            moves.set_mask(!BitBoard::empty());
+
+            for mv in moves {
+                let new = self.alphabeta::<P::Flip>(mv, &args);
+
+                if timeout.is_complete() {
+                    break;
+                }
+
+                if P::is_better(score, new) {
+                    score = new;
+                    best_mv_at = Some(mv);
+                    tracing::debug!(color = ?P::COLOR, depth, "move"=%mv, board=%board, ?score, "{}", "better".bright_green());
+                }
+
+                P::update_cutoff(&mut args.alpha, &mut args.beta, score)
             }
 
             if timeout.is_complete() {
@@ -301,16 +350,6 @@ impl Engine {
         mv: ChessMove,
         args: &AlphaBetaArgs<'_, impl TimeoutRef>,
     ) -> Score {
-        tracing::trace!(
-            current_depth=args.current_depth,
-            depth=args.remaining_depth,
-            color=?P::COLOR,
-            alpha=?args.alpha,
-            beta=?args.beta,
-            "move"=%mv,
-            board=%args.old_board,
-            "start alphabeta"
-        );
         let board = unsafe { args.old_board.move_unchecked(mv) };
         let was_capture = args.old_board.raw().get(mv.dest).is_some();
         let list = if was_capture {
@@ -318,6 +357,31 @@ impl Engine {
         } else {
             args.list.add(&board)
         };
+
+        if args.current_depth == 1 {
+            tracing::debug!(
+                current_depth=args.current_depth,
+                depth=args.remaining_depth,
+                color=?P::COLOR,
+                alpha=?args.alpha,
+                beta=?args.beta,
+                "move"=%mv,
+                was_capture,
+                board=%args.old_board,
+                "consider move"
+            );
+        } else {
+            tracing::trace!(
+                current_depth=args.current_depth,
+                depth=args.remaining_depth,
+                color=?P::COLOR,
+                alpha=?args.alpha,
+                beta=?args.beta,
+                "move"=%mv,
+                board=%args.old_board,
+                "start alphabeta"
+            );
+        }
 
         if was_capture && self.insuffient_material(&board) {
             tracing::trace!(
