@@ -1,6 +1,7 @@
 use core::{
     fmt::{Display, Write},
     ops::{Index, IndexMut, Range},
+    str::FromStr,
 };
 
 #[repr(u8)]
@@ -124,5 +125,65 @@ impl Display for PromotionPiece {
         };
 
         f.write_char(c)
+    }
+}
+
+impl FromStr for Piece {
+    type Err = ();
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_ascii_bytes(s.as_bytes()).ok_or(())
+    }
+}
+
+impl Piece {
+    #[inline]
+    pub fn from_ascii_bytes(s: &[u8]) -> Option<Self> {
+        let &[s] = s else { return None };
+
+        Self::from_ascii_byte(s)
+    }
+
+    #[inline]
+    pub fn from_ascii_byte(s: u8) -> Option<Self> {
+        Some(match s {
+            b'p' | b'P' => Self::Pawn,
+            b'n' | b'N' => Self::Knight,
+            b'b' | b'B' => Self::Bishop,
+            b'r' | b'R' => Self::Rook,
+            b'q' | b'Q' => Self::Queen,
+            b'k' | b'K' => Self::King,
+            _ => return None,
+        })
+    }
+}
+
+impl FromStr for PromotionPiece {
+    type Err = ();
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_ascii_bytes(s.as_bytes()).ok_or(())
+    }
+}
+
+impl PromotionPiece {
+    #[inline]
+    pub fn from_ascii_bytes(s: &[u8]) -> Option<Self> {
+        let &[s] = s else { return None };
+
+        Self::from_ascii_byte(s)
+    }
+
+    #[inline]
+    pub fn from_ascii_byte(s: u8) -> Option<Self> {
+        Some(match s {
+            b'n' | b'N' => Self::Knight,
+            b'b' | b'B' => Self::Bishop,
+            b'r' | b'R' => Self::Rook,
+            b'q' | b'Q' => Self::Queen,
+            _ => return None,
+        })
     }
 }

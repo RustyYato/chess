@@ -1,4 +1,4 @@
-use core::ops::Range;
+use core::{ops::Range, str::FromStr};
 
 use crate::Side;
 
@@ -125,6 +125,11 @@ impl File {
         self as u8
     }
 
+    #[inline(always)]
+    pub const fn dist_to(self, other: Self) -> u8 {
+        (self as u8).abs_diff(other as u8)
+    }
+
     #[inline]
     pub const fn all() -> AllFileIter {
         AllFileIter { range: 0..8 }
@@ -164,6 +169,11 @@ impl Rank {
     #[inline(always)]
     pub const fn to_u8(self) -> u8 {
         self as u8
+    }
+
+    #[inline(always)]
+    pub const fn dist_to(self, other: Self) -> u8 {
+        (self as u8).abs_diff(other as u8)
     }
 
     #[inline]
@@ -406,5 +416,91 @@ impl core::fmt::Display for File {
 impl core::fmt::Display for Rank {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", *self as u8 + 1)
+    }
+}
+
+impl FromStr for Pos {
+    type Err = ();
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_ascii_bytes(s.as_bytes()).ok_or(())
+    }
+}
+
+impl Pos {
+    #[inline]
+    pub fn from_ascii_bytes(s: &[u8]) -> Option<Self> {
+        extern crate std;
+        match s {
+            &[f, r] => Some(Self::new(
+                File::from_ascii_byte(f)?,
+                Rank::from_ascii_byte(r)?,
+            )),
+            _ => None,
+        }
+    }
+}
+
+impl FromStr for File {
+    type Err = ();
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_ascii_bytes(s.as_bytes()).ok_or(())
+    }
+}
+
+impl File {
+    #[inline]
+    pub fn from_ascii_bytes(s: &[u8]) -> Option<Self> {
+        let &[s] = s else {
+            return None
+        };
+
+        Self::from_ascii_byte(s)
+    }
+
+    #[inline]
+    pub fn from_ascii_byte(s: u8) -> Option<Self> {
+        let s = (s | 0b0010_0000).wrapping_sub(b'a');
+        Self::from_u8(s)
+    }
+}
+
+impl FromStr for Rank {
+    type Err = ();
+
+    #[inline]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_ascii_bytes(s.as_bytes()).ok_or(())
+    }
+}
+
+impl Rank {
+    #[inline]
+    pub fn from_ascii_bytes(s: &[u8]) -> Option<Self> {
+        let &[s] = s else {
+            return None
+        };
+
+        Self::from_ascii_byte(s)
+    }
+
+    #[inline]
+    pub fn from_ascii_byte(s: u8) -> Option<Self> {
+        let s = s.wrapping_sub(b'1');
+        Self::from_u8(s)
+    }
+}
+
+
+#[test]
+fn test() { 
+    extern crate std;
+    for i in b'a'..=b'h' {
+        let file = File::from_u8(i - b'a').unwrap();
+        std::eprintln!("{i} {file}");
+        assert_eq!(file, File::from_ascii_byte(i).unwrap())
     }
 }

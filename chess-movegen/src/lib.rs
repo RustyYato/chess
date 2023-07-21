@@ -49,6 +49,31 @@ pub struct ChessMove {
     pub promotion: Option<PromotionPiece>,
 }
 
+impl FromStr for ChessMove {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_ascii_bytes(s.as_bytes()).ok_or(())
+    }
+}
+
+impl ChessMove {
+    pub fn from_ascii_bytes(s: &[u8]) -> Option<Self> {
+        match *s {
+            [sf, sr, b'-', df, dr] | [sf, sr, df, dr] => {
+                let source = Pos::from_ascii_bytes(&[sf, sr])?;
+                let dest = Pos::from_ascii_bytes(&[df, dr])?;
+                Some(ChessMove {
+                    source,
+                    dest,
+                    promotion: None,
+                })
+            }
+            _ => None,
+        }
+    }
+}
+
 impl core::fmt::Display for ChessMove {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}-{}", self.source, self.dest)?;
