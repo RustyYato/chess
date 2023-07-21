@@ -529,37 +529,13 @@ impl Engine {
         match piece_score.cmp(&0) {
             std::cmp::Ordering::Less => {
                 if black_piece_score < 800 + 500 * 3 {
-                    // if we are in the endgame
-                    let white_king = board.king_sq(Color::White);
-                    let black_king = board.king_sq(Color::Black);
-
-                    let dist = chess_lookup::distance(white_king, black_king);
-                    tracing::debug!(current_depth, ?dist);
-                    // minimize the distance to the
-                    // black_endgame_score -= (dist as i32) * 1000;
-                    // penalized for staying close to the edge
-                    white_endgame_score += DIST_FROM_EDGE[white_king] as i32 * 100;
-                    // black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 30;
+                    white_endgame_score += self.eval_endgame(board, Color::Black)
                 }
             }
             std::cmp::Ordering::Equal => (),
             std::cmp::Ordering::Greater => {
                 if white_piece_score < 800 + 500 * 3 {
-                    // if we are in the endgame
-                    let white_king = board.king_sq(Color::White);
-                    let black_king = board.king_sq(Color::Black);
-
-                    let king_moves = board.king_legals(Color::Black).len();
-                    // dbg!(king_moves);
-
-                    let dist = chess_lookup::distance(white_king, black_king);
-                    tracing::debug!(current_depth, ?dist);
-                    // minimize the distance to the
-                    black_endgame_score += (dist as i32) * (dist as i32) * 100;
-                    // penalized for staying close to the edge
-                    // white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
-                    black_endgame_score += DIST_FROM_EDGE[black_king] as i32 * 10;
-                    black_endgame_score += king_moves as i32 * 1000;
+                    black_endgame_score += self.eval_endgame(board, Color::White)
                 }
             }
         }
@@ -574,6 +550,27 @@ impl Engine {
         let piece_score = white_score - black_score;
 
         Score::Raw(piece_score)
+    }
+
+    fn eval_endgame(&mut self, board: &Board, better: Color) -> i32 {
+        // if we are in the endgame
+        let better_king = board.king_sq(better);
+        let worse_king = board.king_sq(!better);
+
+        let king_moves = board.king_legals(!better).len();
+        // dbg!(king_moves);
+
+        let dist = chess_lookup::distance(better_king, worse_king);
+
+        let mut penalty = 0;
+        // penalize for staying far away from the king
+        penalty += (dist as i32) * (dist as i32) * 100;
+        // penalize for staying far from the edge
+        penalty += DIST_FROM_EDGE[worse_king] as i32 * 10;
+        // penalize for allowing more kings moves
+        penalty += king_moves as i32 * 1000;
+
+        penalty
     }
 
     fn score_pieces(&mut self, board: &Board, color: Color) -> i32 {
