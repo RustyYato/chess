@@ -148,9 +148,9 @@ impl Policy for Black {
     }
 }
 
+#[derive(Clone, Copy)]
 struct AlphaBetaArgs<'a, T> {
     old_board: &'a Board,
-    mv: ChessMove,
     timeout: T,
     remaining_depth: u16,
     current_depth: u16,
@@ -256,19 +256,20 @@ impl Engine {
             let mut score = P::WORST_SCORE;
             let mut best_mv_at = None;
 
+            let args = AlphaBetaArgs {
+                old_board: board,
+                timeout,
+                remaining_depth: depth,
+                current_depth: 1,
+                alpha: Score::Min,
+                beta: Score::Max,
+                list: BoardList::new(board, three_fold),
+            };
+
             for mv in board.legals() {
                 tracing::debug!(color = ?P::COLOR, depth, "move"=%mv, board=%board, "consider move");
 
-                let new = self.alphabeta::<P::Flip>(AlphaBetaArgs {
-                    old_board: board,
-                    mv,
-                    timeout,
-                    remaining_depth: depth,
-                    current_depth: 1,
-                    alpha: Score::Min,
-                    beta: Score::Max,
-                    list: BoardList::new(board, three_fold),
-                });
+                let new = self.alphabeta::<P::Flip>(mv, &args);
 
                 if timeout.is_complete() {
                     break;
@@ -295,19 +296,23 @@ impl Engine {
         (best_mv, best_score)
     }
 
-    fn alphabeta<P: Policy>(&mut self, mut args: AlphaBetaArgs<'_, impl TimeoutRef>) -> Score {
+    fn alphabeta<P: Policy>(
+        &mut self,
+        mv: ChessMove,
+        args: &AlphaBetaArgs<'_, impl TimeoutRef>,
+    ) -> Score {
         tracing::trace!(
             current_depth=args.current_depth,
             depth=args.remaining_depth,
             color=?P::COLOR,
             alpha=?args.alpha,
             beta=?args.beta,
-            "move"=%args.mv,
+            "move"=%mv,
             board=%args.old_board,
             "start alphabeta"
         );
-        let board = unsafe { args.old_board.move_unchecked(args.mv) };
-        let was_capture = args.old_board.raw().get(args.mv.dest).is_some();
+        let board = unsafe { args.old_board.move_unchecked(mv) };
+        let was_capture = args.old_board.raw().get(mv.dest).is_some();
         let list = if was_capture {
             BoardList::new(&board, args.list.three_fold)
         } else {
@@ -321,7 +326,7 @@ impl Engine {
                 color=?P::COLOR,
                 alpha=?args.alpha,
                 beta=?args.beta,
-                "move"=%args.mv,
+                "move"=%mv,
                 was_capture,
                 board=%args.old_board,
                 "{}", "tie (material)".bright_blue()
@@ -339,7 +344,7 @@ impl Engine {
                     color=?P::COLOR,
                     alpha=?args.alpha,
                     beta=?args.beta,
-                    "move"=%args.mv,
+                    "move"=%mv,
                     was_capture,
                     board=%args.old_board,
                     "{}", "mate".bright_blue()
@@ -355,7 +360,7 @@ impl Engine {
                     color=?P::COLOR,
                     alpha=?args.alpha,
                     beta=?args.beta,
-                    "move"=%args.mv,
+                    "move"=%mv,
                     was_capture,
                     board=%args.old_board,
                     "{}", "tie (no moves)".bright_blue()
@@ -371,7 +376,7 @@ impl Engine {
                 color=?P::COLOR,
                 alpha=?args.alpha,
                 beta=?args.beta,
-                "move"=%args.mv,
+                "move"=%mv,
                 was_capture,
                 board=%args.old_board,
                 "{}", "tie (clock)".bright_blue()
@@ -385,7 +390,7 @@ impl Engine {
                 depth=args.remaining_depth,
                 alpha=?args.alpha,
                 beta=?args.beta,
-                "move"=%args.mv,
+                "move"=%mv,
                 was_capture,
                 board=%args.old_board,
                 "{}", "tie (reps)".bright_blue()
@@ -402,7 +407,7 @@ impl Engine {
                 color=?P::COLOR,
                 alpha=?args.alpha,
                 beta=?args.beta,
-                "move"=%args.mv,
+                "move"=%mv,
                 was_capture,
                 board=%args.old_board,
                 ?score,
@@ -414,21 +419,22 @@ impl Engine {
 
         let mut score = P::WORST_SCORE;
 
+        let mut args = AlphaBetaArgs {
+            old_board: &board,
+            timeout: args.timeout,
+            remaining_depth: args.remaining_depth - 1,
+            current_depth: args.current_depth + 1,
+            alpha: args.alpha,
+            beta: args.beta,
+            list,
+        };
+
         for mv in moves {
             if args.timeout.is_complete() {
                 break;
             }
 
-            let new = self.alphabeta::<P::Flip>(AlphaBetaArgs {
-                old_board: &board,
-                mv,
-                timeout: args.timeout,
-                remaining_depth: args.remaining_depth - 1,
-                current_depth: args.current_depth + 1,
-                alpha: args.alpha,
-                beta: args.beta,
-                list,
-            });
+            let new = self.alphabeta::<P::Flip>(mv, &args);
 
             let old_score = score;
             if P::is_better(score, new) {
@@ -441,7 +447,7 @@ impl Engine {
                     score.old=?old_score,
                     score.new=?new,
                     score.current=?score,
-                    "move"=%args.mv,
+                    "move"=%mv,
                     "move.next"=%mv,
                     was_capture,
                     board=%args.old_board,
@@ -459,7 +465,7 @@ impl Engine {
                     score.old=?old_score,
                     score.new=?new,
                     score.current=?score,
-                    "move"=%args.mv,
+                    "move"=%mv,
                     "move.next"=%mv,
                     board=%args.old_board,
                     "{}",
@@ -479,7 +485,7 @@ impl Engine {
                     score.old=?old_score,
                     score.new=?new,
                     score.current=?score,
-                    "move"=%args.mv,
+                    "move"=%mv,
                     was_capture,
                     board=%args.old_board,
                     "{}",
@@ -500,7 +506,7 @@ impl Engine {
             alpha=?args.alpha,
             beta=?args.beta,
             ?score,
-            "move"=%args.mv,
+            "move"=%mv,
             was_capture,
             board=%args.old_board,
             "finish alpha beta"
