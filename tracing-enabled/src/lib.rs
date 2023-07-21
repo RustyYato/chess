@@ -1,6 +1,5 @@
 use std::{
     cell::Cell,
-    default,
     marker::PhantomData,
     sync::atomic::{AtomicBool, Ordering},
 };

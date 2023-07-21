@@ -4,11 +4,11 @@ use chess_engine::{DurationTimeout, Engine, Score};
 use chess_movegen::Board;
 use tracing::{field::Visit, metadata::LevelFilter, Event, Level};
 use tracing_subscriber::{
-    field::{RecordFields, VisitWrite},
+    field::RecordFields,
     fmt::{FormatEvent, FormatFields},
     layer::SubscriberExt,
     util::SubscriberInitExt,
-    Layer, Registry,
+    Registry,
 };
 
 struct CurrentDepthTabs<N>(N);
@@ -196,7 +196,7 @@ fn main() {
             break;
         }
 
-        if board.legals().len() == 0 {
+        if board.legals().is_empty() {
             if board.in_check() {
                 println!("WIN");
             } else {
