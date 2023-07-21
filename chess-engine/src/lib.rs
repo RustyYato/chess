@@ -164,11 +164,13 @@ impl Engine {
             }
 
             if timeout.is_complete() {
+                tracing::info!("Timeout");
                 break;
             }
 
             best_mv = best_mv_at;
             best_score = score;
+            self.max_depth = depth;
             depth += 1;
         }
 
@@ -218,8 +220,8 @@ impl Engine {
                     "{}", "mate".bright_blue()
                 );
                 return match P::COLOR {
-                    Color::White => Score::WhiteMateIn(args.current_depth),
-                    Color::Black => Score::BlackMateIn(args.current_depth),
+                    Color::White => Score::BlackMateIn(args.current_depth),
+                    Color::Black => Score::WhiteMateIn(args.current_depth),
                 };
             } else {
                 tracing::trace!(

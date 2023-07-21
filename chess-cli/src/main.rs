@@ -158,8 +158,8 @@ fn main() {
 
     let mut engine = Engine::default();
 
-    // let board = "6k1/8/8/8/4K3/8/8/Q7 w - - 0 1";
-    let board = "5k2/Q7/5K2/8/8/8/8/8 w - - 8 5";
+    let board = "6k1/8/8/8/4K3/8/8/Q7 w - - 0 1";
+    // let board = "5k2/Q7/5K2/8/8/8/8/8 w - - 8 5";
     // let board = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0";
     // let board = "r3k2r/p1ppqpb1/Bn2pnp1/3PN3/4P3/2p2Q1p/PPPB1PPP/R3K2R w KQkq - 0 1";
     // let board = "2k5/8/2K5/8/8/8/6R1/8 w - - 0 1";
@@ -205,9 +205,6 @@ fn main() {
             }
             break;
         }
-        // eprintln!("{board}");
-        // eprintln!("{board:?}");
-        // panic!();
     }
 
     eprintln!("{board:?}");
