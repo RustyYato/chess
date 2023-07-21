@@ -23,6 +23,9 @@ workspace = true
 [dependencies.tracing-subscriber]
 workspace = true
 
+[dependencies.tracing-enabled]
+path = '../tracing-enabled'
+
 [dependencies.colorz]
 version = '1'
 features = ['supports-color', 'std']

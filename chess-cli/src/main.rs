@@ -6,7 +6,9 @@ use tracing::{field::Visit, metadata::LevelFilter, Event, Level};
 use tracing_subscriber::{
     field::{RecordFields, VisitWrite},
     fmt::{FormatEvent, FormatFields},
-    Registry,
+    layer::SubscriberExt,
+    util::SubscriberInitExt,
+    Layer, Registry,
 };
 
 struct CurrentDepthTabs<N>(N);
@@ -114,11 +116,11 @@ impl Visit for BasicFieldVisitor<'_> {
 
         let mut f = self.0.by_ref();
 
-        if field.name() == "message" {
-            write!(f, "{:?}", value);
+        let _ = if field.name() == "message" {
+            write!(f, "{:?}", value)
         } else {
-            write!(f, " {}={:?}", field.fg(xterm::Gray70), value);
-        }
+            write!(f, " {}={:?}", field.fg(xterm::Gray70), value)
+        };
     }
 }
 
@@ -150,7 +152,10 @@ fn main() {
                 .unwrap_or(LevelFilter::OFF),
         )
         .with_writer(std::io::stdout)
+        .finish()
+        .with(tracing_enabled::GlobalEnable)
         .init();
+
     let mut engine = Engine::default();
 
     let board = "6k1/8/8/4K3/8/8/8/Q7 w - - 0 1";

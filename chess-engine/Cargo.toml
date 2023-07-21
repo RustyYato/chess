@@ -22,3 +22,6 @@ workspace = true
 
 [dependencies.colorz]
 version = '1'
+
+[dependencies.tracing-enabled]
+path = '../tracing-enabled'

@@ -9,6 +9,8 @@ members = [
     'chess-movegen',
     'chess-engine',
     'chess-cli',
+
+    'tracing-enabled',
 ]
 
 [workspace.dependencies.chess]
