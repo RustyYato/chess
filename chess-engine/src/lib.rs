@@ -127,6 +127,7 @@ impl Engine {
         timeout: impl TimeoutRef,
     ) -> (Option<ChessMove>, Score) {
         assert_eq!(P::COLOR, board.turn());
+        self.moves_evaluated = 0;
 
         let mut best_score = P::WORST_SCORE;
         let mut best_mv = None;
@@ -398,17 +399,17 @@ impl Engine {
                     let white_king = board.king_sq(Color::White);
                     let black_king = board.king_sq(Color::Black);
 
-                    // let king_moves = board.king_legals(Color::Black).len();
+                    let king_moves = board.king_legals(Color::Black).len();
                     // dbg!(king_moves);
 
                     let dist = chess_lookup::distance(white_king, black_king);
                     tracing::debug!(current_depth, ?dist);
                     // minimize the distance to the
-                    white_endgame_score -= (dist as i32) * (dist as i32) * 1000;
+                    black_endgame_score += (dist as i32) * (dist as i32) * 100;
                     // penalized for staying close to the edge
                     // white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
-                    black_endgame_score += DIST_FROM_EDGE[black_king] as i32 * 1000;
-                    // black_endgame_score += king_moves as i32 * 1000;
+                    black_endgame_score += DIST_FROM_EDGE[black_king] as i32 * 10;
+                    black_endgame_score += king_moves as i32 * 1000;
                 }
             }
         }

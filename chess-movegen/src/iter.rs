@@ -1,5 +1,5 @@
 use crate::{Board, ChessMove};
-use chess_bitboard::{BitBoard, Pos, PromotionPiece};
+use chess_bitboard::{BitBoard, Color, Pos, PromotionPiece};
 
 mod pieces;
 use pieces::*;
@@ -50,6 +50,15 @@ impl Board {
         }
     }
 
+    pub fn king_legals(&self, turn: Color) -> MoveGen {
+        MoveGen {
+            moves: self.collect_king_moves(turn),
+            promotions: PROMOTION_PIECES.iter(),
+            mask: !BitBoard::empty(),
+            index: 0,
+        }
+    }
+
     fn collect_moves(&self, mask: BitBoard) -> MoveList {
         let mut moves = MoveList::default();
         let movelist = &mut moves;
@@ -72,6 +81,21 @@ impl Board {
                 Queen::legals::<IN_CHECK>(movelist, self, mask);
             }
             King::legals::<IN_CHECK>(movelist, self, mask);
+        }
+
+        moves
+    }
+
+    fn collect_king_moves(&self, turn: Color) -> MoveList {
+        let mut moves = MoveList::default();
+        let movelist = &mut moves;
+
+        let mask = !self.raw[turn];
+
+        if self.checkers.none() {
+            King::king_legals::<NO_CHECK>(movelist, self, turn, mask);
+        } else {
+            King::king_legals::<IN_CHECK>(movelist, self, turn, mask);
         }
 
         moves

@@ -203,10 +203,21 @@ impl PieceType for King {
     }
 
     fn legals<const IS_IN_CHECK: bool>(movelist: &mut MoveList, board: &Board, mask: BitBoard) {
-        let combined = board.raw.all();
-        let king_sq = board.king_sq(board.turn);
+        Self::king_legals::<IS_IN_CHECK>(movelist, board, board.turn, mask)
+    }
+}
 
-        let mut moves = Self::pseudo_legals(king_sq, board.turn, combined, mask);
+impl King {
+    pub(super) fn king_legals<const IS_IN_CHECK: bool>(
+        movelist: &mut MoveList,
+        board: &Board,
+        turn: Color,
+        mask: BitBoard,
+    ) {
+        let combined = board.raw.all();
+        let king_sq = board.king_sq(turn);
+
+        let mut moves = Self::pseudo_legals(king_sq, turn, combined, mask);
         let pseudo_legals = moves;
 
         for dest in pseudo_legals {
@@ -230,16 +241,14 @@ impl PieceType for King {
             ];
 
             for (side, castle_files, castle_safe_files) in data {
-                if !board.castle_rights.contains(side, board.turn) {
+                if !board.castle_rights.contains(side, turn) {
                     continue;
                 }
 
-                let backrank = chess_lookup::BACKRANK_BB[board.turn];
+                let backrank = chess_lookup::BACKRANK_BB[turn];
                 let castle_tiles = castle_files & backrank;
 
-                if board.castle_rights.contains(side, board.turn)
-                    && (castle_tiles & combined).none()
-                {
+                if board.castle_rights.contains(side, turn) && (castle_tiles & combined).none() {
                     let no_check_sq = castle_safe_files & backrank;
 
                     debug_assert_eq!(no_check_sq.count(), 2);
