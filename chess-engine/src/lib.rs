@@ -1,6 +1,9 @@
 mod score;
 
-use std::time::{Duration, Instant};
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 
 use chess_bitboard::{Color, Piece};
 use chess_movegen::{Board, ChessMove};
@@ -11,6 +14,52 @@ pub use score::Score;
 pub struct Engine {
     pub moves_evaluated: u64,
     pub max_depth: u16,
+}
+
+#[derive(Default)]
+pub struct ThreeFold {
+    boards: HashMap<Board, u8, IntHashBuilder>,
+}
+
+impl core::fmt::Debug for ThreeFold {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut f = f.debug_map();
+
+        for (board, count) in &self.boards {
+            f.entry(&format_args!("{board}"), count);
+        }
+
+        f.finish()
+    }
+}
+
+#[derive(Debug, Default, Clone, Copy)]
+struct IntHashBuilder;
+struct IntHasher(Option<u64>);
+
+impl std::hash::BuildHasher for IntHashBuilder {
+    type Hasher = IntHasher;
+
+    #[inline]
+    fn build_hasher(&self) -> Self::Hasher {
+        IntHasher(None)
+    }
+}
+
+impl std::hash::Hasher for IntHasher {
+    #[inline]
+    fn finish(&self) -> u64 {
+        self.0.unwrap()
+    }
+
+    fn write(&mut self, _bytes: &[u8]) {
+        todo!()
+    }
+
+    #[inline]
+    fn write_u64(&mut self, i: u64) {
+        self.0 = Some(i)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -107,23 +156,91 @@ struct AlphaBetaArgs<'a, T> {
     current_depth: u16,
     alpha: Score,
     beta: Score,
+    list: BoardList<'a>,
+}
+
+#[derive(Clone, Copy)]
+enum PrevBoard<'a> {
+    Root,
+    Prev(&'a BoardList<'a>),
+}
+
+#[derive(Clone, Copy)]
+struct BoardList<'a> {
+    prev: PrevBoard<'a>,
+    three_fold: &'a ThreeFold,
+    board: &'a Board,
+    count: u8,
+}
+
+impl ThreeFold {
+    pub fn new() -> Self {
+        ThreeFold {
+            boards: HashMap::with_hasher(IntHashBuilder),
+        }
+    }
+
+    pub fn add(&mut self, board: Board) -> bool {
+        let count = self.boards.entry(board).or_insert(0);
+        *count += 1;
+        *count == 3
+    }
+
+    pub fn get(&self, board: &Board) -> u8 {
+        let count = *self.boards.get(board).unwrap_or(&0);
+        // println!("get {count:?}");
+        count
+    }
+}
+
+impl<'a> BoardList<'a> {
+    pub fn new(board: &'a Board, three_fold: &'a ThreeFold) -> Self {
+        Self {
+            prev: PrevBoard::Root,
+            board,
+            three_fold,
+            count: three_fold.get(board),
+        }
+    }
+
+    pub fn add(&'a self, board: &'a Board) -> Self {
+        Self {
+            prev: PrevBoard::Prev(self),
+            board,
+            three_fold: self.three_fold,
+            count: self.count(board) + 1,
+        }
+    }
+
+    pub fn count(&self, board: &Board) -> u8 {
+        if self.board == board {
+            self.count
+        } else {
+            match self.prev {
+                PrevBoard::Root => self.three_fold.get(board),
+                PrevBoard::Prev(prev) => prev.count(board),
+            }
+        }
+    }
 }
 
 impl Engine {
     pub fn search(
         &mut self,
         board: &Board,
+        three_fold: &ThreeFold,
         timeout: impl TimeoutRef,
     ) -> (Option<ChessMove>, Score) {
         match board.turn() {
-            Color::White => self.search_with::<White>(board, timeout),
-            Color::Black => self.search_with::<Black>(board, timeout),
+            Color::White => self.search_with::<White>(board, three_fold, timeout),
+            Color::Black => self.search_with::<Black>(board, three_fold, timeout),
         }
     }
 
     fn search_with<P: Policy>(
         &mut self,
         board: &Board,
+        three_fold: &ThreeFold,
         timeout: impl TimeoutRef,
     ) -> (Option<ChessMove>, Score) {
         assert_eq!(P::COLOR, board.turn());
@@ -150,6 +267,7 @@ impl Engine {
                     current_depth: 1,
                     alpha: Score::Min,
                     beta: Score::Max,
+                    list: BoardList::new(board, three_fold),
                 });
 
                 if timeout.is_complete() {
@@ -189,7 +307,12 @@ impl Engine {
             "start alphabeta"
         );
         let board = unsafe { args.old_board.move_unchecked(args.mv) };
-        let was_capture = args.old_board[!P::COLOR] != board[!P::COLOR];
+        let was_capture = args.old_board.raw().get(args.mv.dest).is_some();
+        let list = if was_capture {
+            BoardList::new(&board, args.list.three_fold)
+        } else {
+            args.list.add(&board)
+        };
 
         if was_capture && self.insuffient_material(&board) {
             tracing::trace!(
@@ -199,6 +322,7 @@ impl Engine {
                 alpha=?args.alpha,
                 beta=?args.beta,
                 "move"=%args.mv,
+                was_capture,
                 board=%args.old_board,
                 "{}", "tie (material)".bright_blue()
             );
@@ -216,6 +340,7 @@ impl Engine {
                     alpha=?args.alpha,
                     beta=?args.beta,
                     "move"=%args.mv,
+                    was_capture,
                     board=%args.old_board,
                     "{}", "mate".bright_blue()
                 );
@@ -231,6 +356,7 @@ impl Engine {
                     alpha=?args.alpha,
                     beta=?args.beta,
                     "move"=%args.mv,
+                    was_capture,
                     board=%args.old_board,
                     "{}", "tie (no moves)".bright_blue()
                 );
@@ -246,8 +372,23 @@ impl Engine {
                 alpha=?args.alpha,
                 beta=?args.beta,
                 "move"=%args.mv,
+                was_capture,
                 board=%args.old_board,
                 "{}", "tie (clock)".bright_blue()
+            );
+            return Score::Raw(0);
+        }
+
+        if list.count == 3 {
+            tracing::trace!(
+                current_depth=args.current_depth,
+                depth=args.remaining_depth,
+                alpha=?args.alpha,
+                beta=?args.beta,
+                "move"=%args.mv,
+                was_capture,
+                board=%args.old_board,
+                "{}", "tie (reps)".bright_blue()
             );
             return Score::Raw(0);
         }
@@ -262,6 +403,7 @@ impl Engine {
                 alpha=?args.alpha,
                 beta=?args.beta,
                 "move"=%args.mv,
+                was_capture,
                 board=%args.old_board,
                 ?score,
                 "{}", "eval".bright_blue()
@@ -285,6 +427,7 @@ impl Engine {
                 current_depth: args.current_depth + 1,
                 alpha: args.alpha,
                 beta: args.beta,
+                list,
             });
 
             let old_score = score;
@@ -299,6 +442,8 @@ impl Engine {
                     score.new=?new,
                     score.current=?score,
                     "move"=%args.mv,
+                    "move.next"=%mv,
+                    was_capture,
                     board=%args.old_board,
                     "{}",
                     "better".bright_green()
@@ -315,6 +460,7 @@ impl Engine {
                     score.new=?new,
                     score.current=?score,
                     "move"=%args.mv,
+                    "move.next"=%mv,
                     board=%args.old_board,
                     "{}",
                     "worse".red()
@@ -334,6 +480,7 @@ impl Engine {
                     score.new=?new,
                     score.current=?score,
                     "move"=%args.mv,
+                    was_capture,
                     board=%args.old_board,
                     "{}",
                     if P::IS_BETA_CUTOFF {
@@ -354,6 +501,7 @@ impl Engine {
             beta=?args.beta,
             ?score,
             "move"=%args.mv,
+            was_capture,
             board=%args.old_board,
             "finish alpha beta"
         );

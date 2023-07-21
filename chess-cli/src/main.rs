@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use chess_engine::{DurationTimeout, Engine, Score};
+use chess_engine::{DurationTimeout, Engine, Score, ThreeFold};
 use chess_movegen::Board;
 use tracing::{field::Visit, metadata::LevelFilter, Event, Level};
 use tracing_subscriber::{
@@ -158,7 +158,7 @@ fn main() {
 
     let mut engine = Engine::default();
 
-    let board = "6k1/8/8/8/4K3/8/8/Q7 w - - 0 1";
+    let board = "6k1/8/8/8/8/8/8/R6K w - - 0 1";
     // let board = "5k2/Q7/5K2/8/8/8/8/8 w - - 8 5";
     // let board = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0";
     // let board = "r3k2r/p1ppqpb1/Bn2pnp1/3PN3/4P3/2p2Q1p/PPPB1PPP/R3K2R w KQkq - 0 1";
@@ -167,14 +167,18 @@ fn main() {
 
     let mut board = board.parse::<Board>().unwrap();
 
-    let mut prev_boards = HashMap::new();
+    let mut three_fold = ThreeFold::new();
 
     loop {
         eprintln!("{board}");
         eprintln!("{board:?}");
 
         // let start = std::time::Instant::now();
-        let (mv, score) = engine.search(&board, DurationTimeout::new(Duration::from_millis(500)));
+        let (mv, score) = engine.search(
+            &board,
+            &three_fold,
+            DurationTimeout::new(Duration::from_millis(500)),
+        );
 
         let Some(mv) = mv else {
             println!("DRAW (MATERIAL)");
@@ -183,16 +187,12 @@ fn main() {
         // dbg!(start.elapsed());
         assert!(board.move_mut(mv));
         eprintln!(
-            "{score:?} {mv:?} moves: {}, max_depth: {}",
+            "{score:?} {mv} moves: {}, max_depth: {}",
             engine.moves_evaluated, engine.max_depth
         );
         assert_ne!(score, Score::Raw(0));
 
-        let count = prev_boards.entry(board).or_insert(0);
-
-        *count += 1;
-
-        if *count == 3 {
+        if three_fold.add(board) {
             println!("DRAW (THREE FOLD)");
             break;
         }
