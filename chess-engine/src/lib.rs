@@ -134,16 +134,14 @@ impl Engine {
         let mut depth = 0;
 
         loop {
-            if depth > 1 {
-                break;
-            }
             tracing::debug!(color = ?P::COLOR, depth, board=%board, "start depth");
             let mut score = P::WORST_SCORE;
             let mut best_mv_at = None;
 
             for mv in board.legals() {
                 tracing::debug!(color = ?P::COLOR, depth, "move"=%mv, board=%board, "consider move");
-                let new = self.alphabeta::<P>(AlphaBetaArgs {
+
+                let new = self.alphabeta::<P::Flip>(AlphaBetaArgs {
                     old_board: board,
                     mv,
                     timeout,
