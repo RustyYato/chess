@@ -359,6 +359,7 @@ impl Engine {
         }
         score
     }
+
     fn eval(&mut self, board: &Board, current_depth: u16) -> Score {
         self.moves_evaluated += 1;
 
@@ -374,43 +375,50 @@ impl Engine {
         let mut white_endgame_score = 0;
         let mut black_endgame_score = 0;
 
-        // match piece_score.cmp(&0) {
-        //     std::cmp::Ordering::Less => {
-        //         if black_piece_score < 800 + 500 * 3 {
-        //             // if we are in the endgame
-        //             let white_king = board.king_sq(Color::White);
-        //             let black_king = board.king_sq(Color::Black);
+        match piece_score.cmp(&0) {
+            std::cmp::Ordering::Less => {
+                if black_piece_score < 800 + 500 * 3 {
+                    // if we are in the endgame
+                    let white_king = board.king_sq(Color::White);
+                    let black_king = board.king_sq(Color::Black);
 
-        //             let dist = chess_lookup::distance(white_king, black_king);
-        //             // minimize the distance to the
-        //             black_endgame_score -= (dist as i32) * 1000;
-        //             // penalized for staying close to the edge
-        //             white_endgame_score -= DIST_FROM_CENTER[white_king] as i32 * 100;
-        //             // black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 30;
-        //         }
-        //     }
-        //     std::cmp::Ordering::Equal => (),
-        //     std::cmp::Ordering::Greater => {
-        //         if white_piece_score < 800 + 500 * 3 {
-        //             // if we are in the endgame
-        //             let white_king = board.king_sq(Color::White);
-        //             let black_king = board.king_sq(Color::Black);
+                    let dist = chess_lookup::distance(white_king, black_king);
+                    tracing::debug!(current_depth, ?dist);
+                    // minimize the distance to the
+                    // black_endgame_score -= (dist as i32) * 1000;
+                    // penalized for staying close to the edge
+                    white_endgame_score += DIST_FROM_EDGE[white_king] as i32 * 100;
+                    // black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 30;
+                }
+            }
+            std::cmp::Ordering::Equal => (),
+            std::cmp::Ordering::Greater => {
+                if white_piece_score < 800 + 500 * 3 {
+                    // if we are in the endgame
+                    let white_king = board.king_sq(Color::White);
+                    let black_king = board.king_sq(Color::Black);
 
-        //             let dist = chess_lookup::distance(white_king, black_king);
-        //             tracing::trace!(current_depth, ?dist);
-        //             // minimize the distance to the
-        //             white_endgame_score -= (dist as i32) * (dist as i32) * 1000;
-        //             // penalized for staying close to the edge
-        //             // white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
-        //             black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
-        //         }
-        //     }
-        // }
+                    // let king_moves = board.king_legals(Color::Black).len();
+                    // dbg!(king_moves);
+
+                    let dist = chess_lookup::distance(white_king, black_king);
+                    tracing::debug!(current_depth, ?dist);
+                    // minimize the distance to the
+                    white_endgame_score -= (dist as i32) * (dist as i32) * 1000;
+                    // penalized for staying close to the edge
+                    // white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
+                    black_endgame_score += DIST_FROM_EDGE[black_king] as i32 * 1000;
+                    // black_endgame_score += king_moves as i32 * 1000;
+                }
+            }
+        }
 
         let white_score = white_piece_score * 100 + white_endgame_score;
         let black_score = black_piece_score * 100 + black_endgame_score;
 
         tracing::trace!(current_depth, ?white_score, ?black_score);
+
+        // assert!(white_score > black_score);
 
         let piece_score = white_score - black_score;
 
@@ -447,13 +455,54 @@ impl Engine {
 }
 
 #[rustfmt::skip]
-static DIST_FROM_CENTER: [u8; 64] = [
-    3, 3, 3, 3, 3, 3, 3, 3,
-    3, 2, 2, 2, 2, 2, 2, 3,
-    3, 2, 1, 1, 1, 1, 2, 3,
-    3, 2, 1, 0, 0, 1, 2, 3,
-    3, 2, 1, 0, 0, 1, 2, 3,
-    3, 2, 1, 1, 1, 1, 2, 3,
-    3, 2, 2, 2, 2, 2, 2, 3,
-    3, 3, 3, 3, 3, 3, 3, 3,
-];
+static DIST_FROM_EDGE: [u8; 64] = {
+    use chess_bitboard::{File, Rank, Pos};
+    let mut scores = [0; 64];
+
+    let mut i = 0;
+
+    while i < scores.len() {
+        let Some(pos) = Pos::from_u8(i as u8) else {
+            unreachable!()
+        };
+
+        let file = pos.file();
+        let rank = pos.rank();
+
+        let to_a = file.dist_to(File::A);
+        let to_h = file.dist_to(File::H);
+
+        let to_1 = rank.dist_to(Rank::_1);
+        let to_8 = rank.dist_to(Rank::_8);
+
+        let to_file_edge = if to_a < to_h {
+            to_a
+        } else {
+            to_h
+        };
+        let to_rank_edge = if to_1 < to_8 {
+            to_1
+        } else {
+            to_8
+        };
+
+        scores[i] = to_file_edge * to_rank_edge * 10 + to_file_edge * to_file_edge + to_rank_edge * to_rank_edge;
+
+        i += 1;
+    }
+
+    scores
+};
+
+#[test]
+fn test() {
+    for rank in chess_bitboard::Rank::all().rev() {
+        for pos in rank {
+            print!("{:2} ", DIST_FROM_EDGE[pos]);
+        }
+
+        println!();
+    }
+
+    panic!()
+}
