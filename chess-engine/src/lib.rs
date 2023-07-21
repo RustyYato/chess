@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 use chess_bitboard::{Color, Piece};
 use chess_movegen::{Board, ChessMove};
 use colorz::Colorize as _;
-use score::Score;
+pub use score::Score;
 
 #[derive(Default)]
 pub struct Engine {
@@ -131,16 +131,18 @@ impl Engine {
         let mut best_score = P::WORST_SCORE;
         let mut best_mv = None;
 
-        let mut depth = 1;
+        let mut depth = 0;
 
         loop {
-            if depth > 3 {
+            if depth > 1 {
                 break;
             }
+            tracing::debug!(color = ?P::COLOR, depth, board=%board, "start depth");
             let mut score = P::WORST_SCORE;
             let mut best_mv_at = None;
 
             for mv in board.legals() {
+                tracing::debug!(color = ?P::COLOR, depth, "move"=%mv, board=%board, "consider move");
                 let new = self.alphabeta::<P>(AlphaBetaArgs {
                     old_board: board,
                     mv,
@@ -158,6 +160,7 @@ impl Engine {
                 if P::is_better(score, new) {
                     score = new;
                     best_mv_at = Some(mv);
+                    tracing::debug!(color = ?P::COLOR, depth, "move"=%mv, board=%board, ?score, "{}", "better".bright_green());
                 }
             }
 
@@ -177,6 +180,7 @@ impl Engine {
         tracing::trace!(
             current_depth=args.current_depth,
             depth=args.remaining_depth,
+            color=?P::COLOR,
             alpha=?args.alpha,
             beta=?args.beta,
             "move"=%args.mv,
@@ -190,6 +194,7 @@ impl Engine {
             tracing::trace!(
                 current_depth=args.current_depth,
                 depth=args.remaining_depth,
+                color=?P::COLOR,
                 alpha=?args.alpha,
                 beta=?args.beta,
                 "move"=%args.mv,
@@ -206,6 +211,7 @@ impl Engine {
                 tracing::trace!(
                     current_depth=args.current_depth,
                     depth=args.remaining_depth,
+                    color=?P::COLOR,
                     alpha=?args.alpha,
                     beta=?args.beta,
                     "move"=%args.mv,
@@ -220,6 +226,7 @@ impl Engine {
                 tracing::trace!(
                     current_depth=args.current_depth,
                     depth=args.remaining_depth,
+                    color=?P::COLOR,
                     alpha=?args.alpha,
                     beta=?args.beta,
                     "move"=%args.mv,
@@ -234,6 +241,7 @@ impl Engine {
             tracing::trace!(
                 current_depth=args.current_depth,
                 depth=args.remaining_depth,
+                color=?P::COLOR,
                 alpha=?args.alpha,
                 beta=?args.beta,
                 "move"=%args.mv,
@@ -249,6 +257,7 @@ impl Engine {
             tracing::trace!(
                 current_depth=args.current_depth,
                 depth=args.remaining_depth,
+                color=?P::COLOR,
                 alpha=?args.alpha,
                 beta=?args.beta,
                 "move"=%args.mv,
@@ -282,6 +291,7 @@ impl Engine {
                 tracing::trace!(
                     current_depth=args.current_depth,
                     depth=args.remaining_depth,
+                    color=?P::COLOR,
                     alpha=?args.alpha,
                     beta=?args.beta,
                     score.old=?old_score,
@@ -297,6 +307,7 @@ impl Engine {
                 tracing::trace!(
                     current_depth=args.current_depth,
                     depth=args.remaining_depth,
+                    color=?P::COLOR,
                     alpha=?args.alpha,
                     beta=?args.beta,
                     score.old=?old_score,
@@ -315,6 +326,7 @@ impl Engine {
                 tracing::trace!(
                     current_depth=args.current_depth,
                     depth=args.remaining_depth,
+                    color=?P::COLOR,
                     alpha=?args.alpha,
                     beta=?args.beta,
                     score.old=?old_score,
@@ -336,6 +348,7 @@ impl Engine {
         tracing::trace!(
             current_depth=args.current_depth,
             depth=args.remaining_depth,
+            color=?P::COLOR,
             alpha=?args.alpha,
             beta=?args.beta,
             ?score,
@@ -343,7 +356,9 @@ impl Engine {
             board=%args.old_board,
             "finish alpha beta"
         );
-
+        if tracing::enabled!(tracing::Level::TRACE) {
+            eprintln!();
+        }
         score
     }
     fn eval(&mut self, board: &Board, current_depth: u16) -> Score {
@@ -361,38 +376,38 @@ impl Engine {
         let mut white_endgame_score = 0;
         let mut black_endgame_score = 0;
 
-        match piece_score.cmp(&0) {
-            std::cmp::Ordering::Less => {
-                if black_piece_score < 800 + 500 * 3 {
-                    // if we are in the endgame
-                    let white_king = board.king_sq(Color::White);
-                    let black_king = board.king_sq(Color::Black);
+        // match piece_score.cmp(&0) {
+        //     std::cmp::Ordering::Less => {
+        //         if black_piece_score < 800 + 500 * 3 {
+        //             // if we are in the endgame
+        //             let white_king = board.king_sq(Color::White);
+        //             let black_king = board.king_sq(Color::Black);
 
-                    let dist = chess_lookup::distance(white_king, black_king);
-                    // minimize the distance to the
-                    black_endgame_score -= (dist as i32) * 1000;
-                    // penalized for staying close to the edge
-                    white_endgame_score -= DIST_FROM_CENTER[white_king] as i32 * 100;
-                    // black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 30;
-                }
-            }
-            std::cmp::Ordering::Equal => (),
-            std::cmp::Ordering::Greater => {
-                if white_piece_score < 800 + 500 * 3 {
-                    // if we are in the endgame
-                    let white_king = board.king_sq(Color::White);
-                    let black_king = board.king_sq(Color::Black);
+        //             let dist = chess_lookup::distance(white_king, black_king);
+        //             // minimize the distance to the
+        //             black_endgame_score -= (dist as i32) * 1000;
+        //             // penalized for staying close to the edge
+        //             white_endgame_score -= DIST_FROM_CENTER[white_king] as i32 * 100;
+        //             // black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 30;
+        //         }
+        //     }
+        //     std::cmp::Ordering::Equal => (),
+        //     std::cmp::Ordering::Greater => {
+        //         if white_piece_score < 800 + 500 * 3 {
+        //             // if we are in the endgame
+        //             let white_king = board.king_sq(Color::White);
+        //             let black_king = board.king_sq(Color::Black);
 
-                    let dist = chess_lookup::distance(white_king, black_king);
-                    tracing::trace!(current_depth, ?dist);
-                    // minimize the distance to the
-                    white_endgame_score -= (dist as i32) * (dist as i32) * 1000;
-                    // penalized for staying close to the edge
-                    // white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
-                    black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
-                }
-            }
-        }
+        //             let dist = chess_lookup::distance(white_king, black_king);
+        //             tracing::trace!(current_depth, ?dist);
+        //             // minimize the distance to the
+        //             white_endgame_score -= (dist as i32) * (dist as i32) * 1000;
+        //             // penalized for staying close to the edge
+        //             // white_score -= DIST_FROM_CENTER[white_king] as i32 * 30;
+        //             black_endgame_score -= DIST_FROM_CENTER[black_king] as i32 * 100;
+        //         }
+        //     }
+        // }
 
         let white_score = white_piece_score * 100 + white_endgame_score;
         let black_score = black_piece_score * 100 + black_endgame_score;

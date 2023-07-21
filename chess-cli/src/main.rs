@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use chess_engine::{DurationTimeout, Engine};
+use chess_engine::{DurationTimeout, Engine, Score};
 use chess_movegen::Board;
 use tracing::{field::Visit, metadata::LevelFilter, Event, Level};
 use tracing_subscriber::{
@@ -168,8 +168,7 @@ fn main() {
         eprintln!("{board:?}");
 
         // let start = std::time::Instant::now();
-        let (mv, score) =
-            engine.search(&board, DurationTimeout::new(Duration::from_secs(1_000_000)));
+        let (mv, score) = engine.search(&board, DurationTimeout::new(Duration::from_millis(500)));
 
         let Some(mv) = mv else {
             println!("DRAW (MATERIAL)");
@@ -181,6 +180,7 @@ fn main() {
             "{score:?} {mv:?} moves: {}, max_depth: {}",
             engine.moves_evaluated, engine.max_depth
         );
+        assert_ne!(score, Score::Raw(0));
 
         let count = prev_boards.entry(board).or_insert(0);
 
