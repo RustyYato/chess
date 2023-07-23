@@ -1,5 +1,5 @@
 serve: build
-    cd site; NODE_OPTIONS=--openssl-legacy-provider npm run serve
+    cd site; RUST_BACKTRACE=1 NODE_OPTIONS=--openssl-legacy-provider npm run serve
 
 build:
     wasm-pack build --target bundler
