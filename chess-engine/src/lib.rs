@@ -1,9 +1,24 @@
 mod score;
 
-use std::{
-    collections::HashMap,
-    time::{Duration, Instant},
-};
+#[cfg(any(
+    all(target_arch = "wasm32", not(target_os = "wasi")),
+    target_arch = "asmjs"
+))]
+mod wasm_instant;
+
+#[cfg(any(
+    all(target_arch = "wasm32", not(target_os = "wasi")),
+    target_arch = "asmjs"
+))]
+use wasm_instant::Instant;
+
+#[cfg(not(any(
+    all(target_arch = "wasm32", not(target_os = "wasi")),
+    target_arch = "asmjs"
+)))]
+use std::time::Instant;
+
+use std::{collections::HashMap, time::Duration};
 
 use chess_bitboard::{BitBoard, Color, Piece};
 use chess_movegen::{Board, ChessMove};
@@ -70,7 +85,7 @@ pub struct DurationTimeout {
 impl DurationTimeout {
     pub fn new(duration: Duration) -> Self {
         Self {
-            deadline: std::time::Instant::now() + duration,
+            deadline: Instant::now() + duration,
         }
     }
 }
