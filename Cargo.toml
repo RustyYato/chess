@@ -9,8 +9,11 @@ members = [
     'chess-movegen',
     'chess-engine',
     'chess-cli',
+    'chess-wasm',
+    'chess-web',
 
     'tracing-enabled',
+    'colorz-tracing',
 ]
 
 [workspace.dependencies.chess]
@@ -21,6 +24,10 @@ version = '0.1'
 
 [workspace.dependencies.tracing-subscriber]
 version = '0.3'
+
+[workspace.dependencies.colorz]
+version = '1.1.2'
+features = ['supports-color', 'std']
 
 [profile.release]
 debug = true

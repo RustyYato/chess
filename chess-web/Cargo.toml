@@ -1,0 +1,32 @@
+[package]
+name = "chess-web"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies.tokio]
+version = '1'
+features = ['macros', 'rt-multi-thread']
+
+[dependencies]
+axum = '0.6'
+
+dotenvy = '0.15'
+eyre = '0.6'
+clap = { version = '4', features = ['derive', 'env'] }
+
+colorz = { workspace = true }
+colorz-eyre = { git = 'https://github.com/RustyYato/colorz-eyre.git', branch = 'master' }
+
+[dependencies.colorz-tracing]
+path = '../colorz-tracing'
+
+[dependencies.tracing-enabled]
+path = '../tracing-enabled'
+
+[dependencies.tracing]
+workspace = true
+
+[dependencies.tracing-subscriber]
+workspace = true

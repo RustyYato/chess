@@ -26,9 +26,11 @@ workspace = true
 [dependencies.tracing-enabled]
 path = '../tracing-enabled'
 
+[dependencies.colorz-tracing]
+path = '../colorz-tracing'
+
 [dependencies.colorz]
-version = '1'
-features = ['supports-color', 'std']
+workspace = true
 
 [dependencies.chrono]
 version = '0.4'
