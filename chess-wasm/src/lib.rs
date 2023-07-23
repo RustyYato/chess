@@ -5,6 +5,7 @@ extern "C" {
     pub fn alert(s: &str);
 }
 
+#[wasm_bindgen]
 pub fn greet() {
     alert("hello world")
 }
