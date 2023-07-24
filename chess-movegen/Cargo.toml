@@ -5,6 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+abi_stable = ['chess-bitboard/abi_stable', 'dep:abi_stable']
+
 [dependencies.chess-bitboard]
 path = '../chess-bitboard'
 
@@ -13,3 +16,7 @@ path = '../chess-lookup'
 
 [dependencies.arrayvec]
 version = '0.7'
+
+[dependencies.abi_stable]
+version = '0.11'
+optional = true

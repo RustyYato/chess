@@ -5,6 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+abi_stable = [
+    'dep:abi_stable',
+    'chess-movegen/abi_stable',
+    'chess-bitboard/abi_stable'
+]
+
 [dependencies.chess-bitboard]
 path = '../chess-bitboard'
 
@@ -28,6 +35,10 @@ version = '1'
 
 [dependencies.tracing-enabled]
 path = '../tracing-enabled'
+
+[dependencies.abi_stable]
+version = '0.11'
+optional = true
 
 [target.'cfg(any(all(target_arch = "wasm32", not(target_os = "wasi")),target_arch = "asmjs"))'.dependencies]
 wasm-bindgen = '0.2'

@@ -2,6 +2,8 @@ use std::ops::Index;
 
 use chess_bitboard::{BitBoard, Color, Piece, Pos};
 
+#[cfg_attr(feature = "abi_stable", repr(C))]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct RawBoard {
     colors: [BitBoard; 2],

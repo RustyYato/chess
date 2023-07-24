@@ -2,6 +2,8 @@ use core::ops::{Index, IndexMut, Not, Range};
 
 use crate::Rank;
 
+#[cfg_attr(feature = "abi_stable", repr(u8))]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Color {
     White,

@@ -218,7 +218,7 @@ impl Iterator for MoveGen {
             let result = ChessMove {
                 source: legal.src,
                 dest,
-                promotion: Some(promotion),
+                piece: Some(promotion),
             };
 
             if self.promotions.len() == 0 {
@@ -240,7 +240,7 @@ impl Iterator for MoveGen {
             let result = ChessMove {
                 source: legal.src,
                 dest,
-                promotion: None,
+                piece: None,
             };
 
             if possible_moves.none() {

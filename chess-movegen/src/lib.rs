@@ -13,17 +13,73 @@ use std::{
 };
 
 use chess_bitboard::{BitBoard, Color, File, Piece, Pos, PromotionPiece, Rank, Side};
+
+#[cfg_attr(feature = "abi_stable", repr(C))]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Clone, Copy)]
 pub struct Board {
     zobrist: u64,
     turn: Color,
     castle_rights: castle_rights::CastleRights,
-    enpassant_target: Option<chess_bitboard::File>,
+    // We use `OptionalFile` instead of `Option<File>` because
+    // `Option<File>` isn't guaranteed to have a stable ABI
+    // but `OptionalFile` is. However in practice, they have
+    // the exact same ABI, so a conversion between them is a no-op
+    enpassant_target: OptionalFile,
     half_move_clock: u16,
     full_move_clock: u16,
     pinned: BitBoard,
     checkers: BitBoard,
     raw: raw::RawBoard,
+}
+
+#[repr(u8)]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+enum OptionalFile {
+    A = File::A as u8,
+    B = File::B as u8,
+    C = File::C as u8,
+    D = File::D as u8,
+    E = File::E as u8,
+    F = File::F as u8,
+    G = File::G as u8,
+    H = File::H as u8,
+    None,
+}
+
+impl From<Option<File>> for OptionalFile {
+    #[inline]
+    fn from(value: Option<File>) -> Self {
+        match value {
+            Some(File::A) => Self::A,
+            Some(File::B) => Self::B,
+            Some(File::C) => Self::C,
+            Some(File::D) => Self::D,
+            Some(File::E) => Self::E,
+            Some(File::F) => Self::F,
+            Some(File::G) => Self::G,
+            Some(File::H) => Self::H,
+            None => Self::None,
+        }
+    }
+}
+
+impl From<OptionalFile> for Option<File> {
+    #[inline]
+    fn from(value: OptionalFile) -> Self {
+        match value {
+            OptionalFile::A => Some(File::A),
+            OptionalFile::B => Some(File::B),
+            OptionalFile::C => Some(File::C),
+            OptionalFile::D => Some(File::D),
+            OptionalFile::E => Some(File::E),
+            OptionalFile::F => Some(File::F),
+            OptionalFile::G => Some(File::G),
+            OptionalFile::H => Some(File::H),
+            OptionalFile::None => None,
+        }
+    }
 }
 
 impl Hash for Board {
@@ -46,7 +102,7 @@ impl PartialEq for Board {
 pub struct ChessMove {
     pub source: Pos,
     pub dest: Pos,
-    pub promotion: Option<PromotionPiece>,
+    pub piece: Option<PromotionPiece>,
 }
 
 impl FromStr for ChessMove {
@@ -66,7 +122,7 @@ impl ChessMove {
                 Some(ChessMove {
                     source,
                     dest,
-                    promotion: None,
+                    piece: None,
                 })
             }
             _ => None,
@@ -77,7 +133,7 @@ impl ChessMove {
 impl core::fmt::Display for ChessMove {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}-{}", self.source, self.dest)?;
-        if let Some(promotion) = self.promotion {
+        if let Some(promotion) = self.piece {
             write!(f, "{}", promotion)?
         }
         Ok(())
@@ -125,7 +181,7 @@ impl core::fmt::Display for Board {
 
         self.castle_rights.fmt(f)?;
 
-        match self.enpassant_target {
+        match self.ep() {
             Some(file) => {
                 let rank = self.turn.enpassant_pawn_rank();
 
@@ -150,7 +206,7 @@ impl core::fmt::Debug for Board {
         self.half_move_clock.fmt(f)?;
         f.write_str("\nfull moves: ")?;
         self.full_move_clock.fmt(f)?;
-        if let Some(ep) = self.enpassant_target {
+        if let Some(ep) = self.ep() {
             f.write_str("\nen-passant: ")?;
             ep.fmt(f)?;
         }
@@ -245,7 +301,7 @@ impl BoardBuilder {
 
     #[inline]
     pub fn enpassant(&mut self, enpassant_target: impl Into<Option<File>>) -> &mut Self {
-        self.board.enpassant_target = enpassant_target.into();
+        self.board.enpassant_target = OptionalFile::from(enpassant_target.into());
         self
     }
 
@@ -295,7 +351,7 @@ impl Board {
                 zobrist: 0,
                 turn: Color::White,
                 castle_rights: castle_rights::CastleRights::empty(),
-                enpassant_target: None,
+                enpassant_target: OptionalFile::None,
                 half_move_clock: 0,
                 full_move_clock: 0,
                 pinned: BitBoard::empty(),
@@ -305,12 +361,17 @@ impl Board {
         }
     }
 
+    #[inline]
+    fn ep(&self) -> Option<File> {
+        self.enpassant_target.into()
+    }
+
     pub const fn standard() -> Self {
         Self {
             zobrist: 2044085020143996643,
             turn: Color::White,
             castle_rights: castle_rights::CastleRights::full(),
-            enpassant_target: None,
+            enpassant_target: OptionalFile::None,
             half_move_clock: 0,
             full_move_clock: 0,
             pinned: BitBoard::empty(),
@@ -335,7 +396,7 @@ impl Board {
     }
 
     fn validate_en_passant(&self) -> Result<(), BoardValidationError> {
-        if let Some(ep) = self.enpassant_target {
+        if let Some(ep) = self.ep() {
             if self
                 .raw
                 .get(Pos::new(ep, self.turn.enpassant_capture_rank()))
@@ -421,9 +482,7 @@ impl Board {
     pub fn zobrist(&self) -> u64 {
         self.zobrist
             ^ chess_lookup::turn_zobrist(self.turn)
-            ^ self
-                .enpassant_target
-                .map_or(0, chess_lookup::en_passant_zobrist)
+            ^ self.ep().map_or(0, chess_lookup::en_passant_zobrist)
             ^ chess_lookup::castle_rights_zobrist(self.castle_rights.to_index())
     }
 
@@ -479,7 +538,7 @@ impl Board {
 
     #[inline]
     fn enpassant_pos(&self) -> Option<Pos> {
-        self.enpassant_target
+        self.ep()
             .map(|file| Pos::new(file, self.turn.enpassant_capture_rank()))
     }
 
@@ -554,7 +613,7 @@ impl Board {
     /// * mv must be a legal chess move
     pub unsafe fn move_unchecked_into(&self, mv: ChessMove, output: &mut Self) {
         *output = *self;
-        output.enpassant_target = None;
+        output.enpassant_target = OptionalFile::None;
         output.checkers = BitBoard::empty();
         output.pinned = BitBoard::empty();
         output.turn = !self.turn;
@@ -585,7 +644,7 @@ impl Board {
             output.checkers ^= chess_lookup::knight_moves(opp_king) & dest_bb;
         } else if piece == Piece::Pawn {
             output.half_move_clock = 0;
-            if let Some(promotion) = mv.promotion {
+            if let Some(promotion) = mv.piece {
                 debug_assert_eq!(mv.dest.rank(), chess_lookup::PROMOTION_RANK[self.turn]);
 
                 // Bishop, Rook, and Queen checkers will be handled below
@@ -596,7 +655,7 @@ impl Board {
                 output.xor(self.turn, Piece::Pawn, dest_bb);
                 output.xor(self.turn, promotion.to_piece(), dest_bb);
             } else if mv_bb & chess_lookup::PAWN_DOUBLE_MOVE[self.turn] == mv_bb {
-                output.enpassant_target = Some(mv.dest.file());
+                output.enpassant_target = Some(mv.dest.file()).into();
             } else if Some(mv.dest) == self.enpassant_pos() {
                 let ep_file = mv.dest.file();
 
@@ -608,7 +667,7 @@ impl Board {
                 );
             }
 
-            if mv.promotion.is_none() {
+            if mv.piece.is_none() {
                 output.checkers ^= chess_lookup::pawn_attacks_moves(opp_king, !self.turn) & dest_bb;
             }
         } else if castles {

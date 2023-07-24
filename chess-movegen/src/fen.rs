@@ -151,7 +151,7 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
         pinned: chess_bitboard::BitBoard::empty(),
         checkers: chess_bitboard::BitBoard::empty(),
         castle_rights,
-        enpassant_target,
+        enpassant_target: enpassant_target.into(),
         half_move_clock,
         full_move_clock,
     };

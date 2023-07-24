@@ -15,6 +15,7 @@ pub use pos::{File, Pos, Rank};
 pub use side::Side;
 
 #[repr(transparent)]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BitBoard(u64);
 

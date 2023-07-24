@@ -5,6 +5,7 @@ use core::{
 };
 
 #[repr(u8)]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Piece {
     Pawn,
@@ -16,6 +17,7 @@ pub enum Piece {
 }
 
 #[repr(u8)]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PromotionPiece {
     Knight = Piece::Knight as u8,

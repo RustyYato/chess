@@ -10,6 +10,8 @@ members = [
     'chess-engine',
     'chess-cli',
     'chess-wasm',
+    'chess-api',
+    'chess-bot',
 
     'tracing-enabled',
     'colorz-tracing',

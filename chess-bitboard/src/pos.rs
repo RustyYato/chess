@@ -3,6 +3,7 @@ use core::{ops::Range, str::FromStr};
 use crate::Side;
 
 #[repr(u8)]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[rustfmt::skip]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Pos {
@@ -17,6 +18,7 @@ pub enum Pos {
 }
 
 #[repr(u8)]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum File {
     A,
@@ -30,6 +32,7 @@ pub enum File {
 }
 
 #[repr(u8)]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Rank {
     _1,

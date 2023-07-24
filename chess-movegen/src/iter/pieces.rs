@@ -133,7 +133,7 @@ impl PieceType for Pawn {
             }
         }
 
-        if let Some(ep_file) = board.enpassant_target {
+        if let Some(ep_file) = board.ep() {
             let rank = board.turn.enpassant_pawn_rank();
             let files = chess_lookup::ADJACENT_FILES[ep_file];
             let dest_rank = board.turn.enpassant_capture_rank();

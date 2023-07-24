@@ -60,6 +60,8 @@ const _: () = {
     assert!(__.0 != BB.0);
 };
 
+#[repr(transparent)]
+#[cfg_attr(feature = "abi_stable", derive(abi_stable::StableAbi))]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct CastleRights(u8);
 
