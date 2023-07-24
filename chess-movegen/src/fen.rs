@@ -19,6 +19,81 @@ pub enum ParseFenError {
     BoardValidation(crate::BoardValidationError),
 }
 
+impl core::fmt::Display for ParseFenError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ParseFenError::InvalidPiece(p, pos) => {
+                if p.is_ascii_graphic() {
+                    write!(f, "Invalid piece type {} at {pos}", *p as char)
+                } else {
+                    write!(f, "Invalid byte 0x{p:x} at {pos}")
+                }
+            }
+            ParseFenError::MissingPiece(pos) => {
+                write!(f, "Missing piece at {pos}")
+            }
+            ParseFenError::MissingWhitespace(x) => {
+                write!(
+                    f,
+                    "Missing whitespace after {}",
+                    match x {
+                        MissingWhitespace::Pieces => "pieces",
+                        MissingWhitespace::Turn => "turn",
+                        MissingWhitespace::CastleRights => "castle rights",
+                        MissingWhitespace::Enpassant => "enpassant",
+                        MissingWhitespace::HalfMoveClock => "half move clock",
+                    }
+                )
+            }
+            ParseFenError::InvalidTurn(p) => {
+                if p.is_ascii_graphic() {
+                    write!(f, "Invalid turn {}", *p as char)
+                } else {
+                    write!(f, "Invalid byte 0x{p:x} at turn")
+                }
+            }
+            ParseFenError::MissingTurn => write!(f, "Missing turn"),
+            ParseFenError::FileOutOfBounds(x) => {
+                write!(f, "file out of bounds at rank {x}")
+            }
+            ParseFenError::InvalidEnpassant { file, rank } => {
+                if !file.is_ascii_graphic() {
+                    write!(f, "Invalid byte 0x{file:x} at enpassant file")
+                } else if !rank.is_ascii_graphic() {
+                    write!(f, "Invalid byte 0x{rank:x} at enpassant rank")
+                } else {
+                    write!(
+                        f,
+                        "Invalid en passant file = {}, rank = {}",
+                        *file as char, *rank as char
+                    )
+                }
+            }
+            ParseFenError::MissingEnpassant => {
+                write!(f, "Missing en passant")
+            }
+            ParseFenError::MissingCastleRights => write!(f, "Missing castle rights"),
+            ParseFenError::MissingHalfClock => write!(f, "Missing half move clock"),
+            ParseFenError::MissingFullClock => write!(f, "Missing full move clock"),
+            ParseFenError::TrailingBytes => write!(f, "found traliing bytes after full move clock"),
+            ParseFenError::BoardValidation(x) => match x {
+                crate::BoardValidationError::MissingKings => write!(f, "Missing kings on board, there must be exactly one white and one  black king on the board"),
+                crate::BoardValidationError::InvalidCastleRights => {
+                    write!(f, "Invalid castle rights, the king and relevant rook must be at their starting position")
+                }
+                crate::BoardValidationError::InvalidEnpassant => {
+                    write!(f, "Invalid en passant")
+                },
+                crate::BoardValidationError::TooManyPieces => {
+                    write!(f, "Too many pieces, there may be at most 16 pieces on each side")
+                },
+            },
+        }
+    }
+}
+
+impl std::error::Error for ParseFenError {}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MissingWhitespace {
     Pieces,

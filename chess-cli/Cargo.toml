@@ -1,3 +1,4 @@
+
 [package]
 name = "chess-cli"
 version = "0.1.0"
@@ -14,8 +15,12 @@ path = '../chess-movegen'
 [dependencies.chess-engine]
 path = '../chess-engine'
 
-[dependencies.chess]
-workspace = true
+[dependencies.clap]
+version = '4'
+features = ['derive']
+
+[dependencies.bytesize]
+version = '1.2'
 
 [dependencies.tracing]
 workspace = true

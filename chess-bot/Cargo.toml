@@ -10,3 +10,6 @@ chess-api = { path = '../chess-api' }
 chess-movegen = { path = '../chess-movegen' }
 chess-engine = { path = '../chess-engine' }
 abi_stable = '0.11'
+
+[lib]
+crate-type = ["cdylib", 'rlib']
