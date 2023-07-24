@@ -1,7 +1,8 @@
 use std::time::Duration;
 
+use chess_bitboard::{File, Pos, Rank};
 use chess_movegen::ChessMove;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::{prelude::*, JsError};
 
 #[wasm_bindgen]
 pub struct ChessEngine {
@@ -26,11 +27,11 @@ impl ChessEngine {
         &mut self,
         game: &ChessGame,
         timeout: Option<String>,
-    ) -> Result<EngineChessMove, wasm_bindgen::JsError> {
+    ) -> Result<EngineChessMove, JsError> {
         let timeout = timeout
             .map(|timeout| parse_duration::parse(&timeout))
             .transpose()
-            .map_err(|err| wasm_bindgen::JsError::new(&err.to_string()))?
+            .map_err(|err| JsError::new(&err.to_string()))?
             .unwrap_or(Duration::from_secs(5));
 
         let (chess_move, score) = self.engine.search(
@@ -40,6 +41,17 @@ impl ChessEngine {
         );
 
         Ok(EngineChessMove { chess_move, score })
+    }
+}
+
+impl ChessGame {
+    pub fn get(&self, file: u8, rank: u8) -> Result<u8, JsError> {
+        let file = File::from_u8(file).ok_or_else(|| JsError::new("Invalid file"))?;
+        let rank = Rank::from_u8(rank).ok_or_else(|| JsError::new("Invalid rank"))?;
+        match self.board.raw().get(Pos::new(file, rank)) {
+            Some((color, piece)) => Ok((piece as u8 + 1) << 1 | color as u8),
+            None => Ok(0),
+        }
     }
 }
 
