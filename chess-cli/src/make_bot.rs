@@ -35,7 +35,6 @@ pub fn main(args: Args) {
     if let Some(parent) = bot_path.parent() {
         std::fs::create_dir_all(parent).unwrap();
     }
-    std::fs::remove_file(&bot_path).unwrap();
     std::fs::copy(TARGET_PATH, &bot_path).unwrap();
 
     eprintln!(
