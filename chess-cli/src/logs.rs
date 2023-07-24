@@ -67,10 +67,11 @@ pub fn init(level: i8) {
                 .transpose()
                 .expect("Invalid level")
                 .unwrap_or(LevelFilter::WARN),
-            -1 => LevelFilter::INFO,
-            1..=i8::MAX => LevelFilter::ERROR,
-            -2 => LevelFilter::DEBUG,
-            i8::MIN..=-3 => LevelFilter::TRACE,
+            i8::MIN..=-2 => LevelFilter::OFF,
+            -1 => LevelFilter::ERROR,
+            1 => LevelFilter::INFO,
+            2 => LevelFilter::DEBUG,
+            3..=i8::MAX => LevelFilter::TRACE,
         })
         .with_writer(std::io::stdout)
         .finish()

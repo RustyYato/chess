@@ -1,8 +1,15 @@
+use std::path::Path;
+
 pub use abi_stable;
 
 use abi_stable::{
-    declare_root_module_statics, library::RootModule, package_version_strings, sabi_trait,
-    sabi_trait::TD_Opaque, sabi_types::VersionStrings, std_types::RBox, RRef,
+    declare_root_module_statics,
+    library::{LibraryError, RootModule},
+    package_version_strings, sabi_trait,
+    sabi_trait::TD_Opaque,
+    sabi_types::VersionStrings,
+    std_types::RBox,
+    RRef,
 };
 use chess_bitboard::{Pos, PromotionPiece};
 use chess_engine::{Score, Timeout};
@@ -10,7 +17,7 @@ pub use chess_movegen::{Board, ChessMove};
 
 #[repr(C)]
 #[derive(abi_stable::StableAbi)]
-#[sabi(kind(Prefix(prefix_ref = ChessApiRef)))]
+#[sabi(kind(Prefix(prefix_ref = ChessApiRefRaw)))]
 #[sabi(missing_field(panic))]
 pub struct ChessApi {
     #[sabi(last_prefix_field)]
@@ -48,11 +55,37 @@ impl ChessApi {
     }
 }
 
+pub struct ChessApiRef(ChessApiRefRaw);
+
 impl ChessApiRef {
+    /// Loads this module from the directory specified by `where_`,
+    /// first loading the dynamic library if it wasn't already loaded.
+    ///
+    /// Once the root module is loaded,
+    /// this will return the already loaded root module.
+    ///
+    /// Warnings and Errors are detailed in [`load_from`](#method.load_from),
+    ///
+    pub fn load_from_directory(where_: &Path) -> Result<Self, LibraryError> {
+        ChessApiRefRaw::load_from_directory(where_).map(Self)
+    }
+
+    /// Loads this module from the file at `path_`,
+    /// first loading the dynamic library if it wasn't already loaded.
+    ///
+    /// Once the root module is loaded,
+    /// this will return the already loaded root module.
+    ///
+    /// Warnings and Errors are detailed in [`load_from`](#method.load_from),
+    ///
+    pub fn load_from_file(path_: &Path) -> Result<Self, LibraryError> {
+        ChessApiRefRaw::load_from_file(path_).map(Self)
+    }
+
     #[inline]
     pub fn new_engine(&self) -> ChessEngine {
         ChessEngine {
-            bx: self._new_engine()(),
+            bx: self.0._new_engine()(),
         }
     }
 }
@@ -63,8 +96,14 @@ pub struct ChessEngine {
 
 impl ChessEngine {
     #[inline]
-    pub fn evaluate<T: Timeout>(&mut self, timeout: &T) -> EvaluatedMove {
-        self.bx.evaluate(TimeoutReference::new(timeout))
+    pub fn evaluate<T: Timeout>(&mut self, timeout: &T) -> (Option<ChessMove>, Score) {
+        let mv = self.bx.evaluate(TimeoutReference::new(timeout));
+        (mv.chess_move(), mv.score())
+    }
+
+    #[inline]
+    pub fn board(&self) -> Board {
+        self.bx.board()
     }
 
     #[inline]
@@ -73,24 +112,33 @@ impl ChessEngine {
     }
 
     #[inline]
-    pub fn make_move(&mut self, mv: ChessMove) -> bool {
+    pub fn make_move(&mut self, mv: ChessMove) -> MoveResult {
         self.bx.make_move(StableChessMove::from(mv))
     }
+}
+
+#[repr(C)]
+#[derive(abi_stable::StableAbi)]
+pub struct MoveResult {
+    pub is_valid: bool,
+    pub is_three_fold_draw: bool,
 }
 
 #[sabi_trait]
 pub trait ChessEngineTrait {
     fn evaluate(&mut self, timeout: TimeoutReference<'_>) -> EvaluatedMove;
 
+    fn board(&self) -> Board;
+
     fn set_board(&mut self, board: Board);
 
-    fn make_move(&mut self, mv: StableChessMove) -> bool;
+    fn make_move(&mut self, mv: StableChessMove) -> MoveResult;
 }
 
-impl RootModule for ChessApiRef {
-    declare_root_module_statics! {ChessApiRef}
-    const BASE_NAME: &'static str = "plugin";
-    const NAME: &'static str = "plugin";
+impl RootModule for ChessApiRefRaw {
+    declare_root_module_statics! {ChessApiRefRaw}
+    const BASE_NAME: &'static str = "chess-bot";
+    const NAME: &'static str = "chess-bot";
     const VERSION_STRINGS: VersionStrings = package_version_strings!();
 }
 

@@ -344,6 +344,14 @@ pub enum BoardValidationError {
     TooManyPieces,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameState {
+    CheckMate,
+    StaleMate,
+    Check,
+    Running,
+}
+
 impl Board {
     pub const fn builder() -> BoardBuilder {
         BoardBuilder {
@@ -494,6 +502,20 @@ impl Board {
     #[inline]
     pub fn in_check(&self) -> bool {
         self.checkers.any()
+    }
+
+    #[inline]
+    pub fn state(&self) -> GameState {
+        match (
+            self.legals().is_empty(),
+            self.in_check(),
+            self.half_move_clock >= 100,
+        ) {
+            (true, true, _) => GameState::CheckMate,
+            (true, false, _) | (_, _, true) => GameState::StaleMate,
+            (false, true, false) => GameState::Check,
+            (false, false, false) => GameState::Running,
+        }
     }
 
     fn update_pin_info(&mut self) {
