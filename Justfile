@@ -14,4 +14,4 @@ make-bot name:
     cargo run -p chess-cli -- make-bot {{name}} --strip
 
 fight *bots:
-    cargo run -p chess-cli -r -- bot-fight {{bots}} -g 100 -t 1ms -g 25 -t 10ms -g 10 -t 100ms --thread-count 24
+    cargo run -p chess-cli -r -- bot-fight {{bots}} -g 200 -t 1ms -g 50 -t 10ms -g 50 -t 100ms --thread-count 24

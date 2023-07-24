@@ -27,6 +27,9 @@ version = '1'
 [dependencies.parse_duration]
 version = '2'
 
+[dependencies.rand]
+version = '0.8'
+
 [dependencies.clap]
 version = '4'
 features = ['derive', 'env']

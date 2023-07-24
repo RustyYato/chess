@@ -1,5 +1,6 @@
 use chess_movegen::Board;
 use colorz::Colorize;
+use rand::seq::SliceRandom;
 use std::{collections::HashMap, path::PathBuf, time::Duration};
 
 use rayon::prelude::*;
@@ -57,21 +58,21 @@ pub fn main(args: Args) {
         .build_global()
         .unwrap();
 
-    let results = indicies
+    let mut game_specs = indicies
         .clone()
-        .into_par_iter()
-        .flat_map(|x| indicies.clone().into_par_iter().map(move |y| (x, y)))
+        .flat_map(|x| indicies.clone().map(move |y| (x, y)))
         .filter(|(x, y)| x != y)
         .flat_map(|(x, y)| {
             games
-                .par_iter()
+                .iter()
                 .map(move |&(games, time_control)| (x, y, games, time_control))
         })
-        .flat_map(|(x, y, games, time_control)| {
-            (0..games)
-                .into_par_iter()
-                .map(move |_| (x, y, time_control))
-        })
+        .flat_map(|(x, y, games, time_control)| (0..games).map(move |_| (x, y, time_control)))
+        .collect::<Vec<_>>();
+
+    game_specs.shuffle(&mut rand::thread_rng());
+
+    let results = game_specs.into_par_iter()
         .map(|(x, y, time_control)| {
             tracing::info!(
                 "started game between {} ({x}) and {} ({y}) at {time_control:?} per move",
