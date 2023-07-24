@@ -67,7 +67,7 @@ impl Pos {
             48 => Pos::G1,    49 => Pos::G2,    50 => Pos::G3,    51 => Pos::G4,    52 => Pos::G5,    53 => Pos::G6,    54 => Pos::G7,    55 => Pos::G8,
             56 => Pos::H1,    57 => Pos::H2,    58 => Pos::H3,    59 => Pos::H4,    60 => Pos::H5,    61 => Pos::H6,    62 => Pos::H7,    63 => Pos::H8,
             64.. => return None
-        })        
+        })
     }
 
     #[inline(always)]
@@ -109,18 +109,18 @@ impl File {
             5 => File::F,
             6 => File::G,
             7 => File::H,
-            8.. => return None
+            8.. => return None,
         })
     }
 
     #[inline(always)]
     pub const fn lower_letter(self) -> char {
-        (b'a' + self as u8 ) as char
+        (b'a' + self as u8) as char
     }
 
     #[inline(always)]
     pub const fn upper_letter(self) -> char {
-        (b'A' + self as u8 ) as char
+        (b'A' + self as u8) as char
     }
 
     #[inline(always)]
@@ -140,7 +140,10 @@ impl File {
 
     #[inline]
     pub const fn iter(self) -> FileIter {
-        FileIter { file: self, ranks: Rank::all() }
+        FileIter {
+            file: self,
+            ranks: Rank::all(),
+        }
     }
 
     #[inline(always)]
@@ -165,7 +168,7 @@ impl Rank {
             5 => Rank::_6,
             6 => Rank::_7,
             7 => Rank::_8,
-            _ => return None
+            _ => return None,
         })
     }
 
@@ -186,13 +189,16 @@ impl Rank {
 
     #[inline]
     pub const fn iter(self) -> RankIter {
-        RankIter { rank: self, files: File::all() }
+        RankIter {
+            rank: self,
+            files: File::all(),
+        }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AllPosIter {
-    pos: u8
+    pos: u8,
 }
 
 impl Iterator for AllPosIter {
@@ -214,13 +220,13 @@ impl Iterator for AllPosIter {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AllFileIter {
-    range: Range<u8>
+    range: Range<u8>,
 }
 
-impl  AllFileIter {
+impl AllFileIter {
     fn next_with(&mut self, f: impl FnOnce(&mut Range<u8>) -> Option<u8>) -> Option<File> {
         let rank = File::from_u8(f(&mut self.range)?);
-        Some(unsafe{ rank.unwrap_unchecked() })
+        Some(unsafe { rank.unwrap_unchecked() })
     }
 }
 
@@ -255,13 +261,13 @@ impl DoubleEndedIterator for AllFileIter {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AllRankIter {
-    range: Range<u8>
+    range: Range<u8>,
 }
 
-impl  AllRankIter {
+impl AllRankIter {
     fn next_with(&mut self, f: impl FnOnce(&mut Range<u8>) -> Option<u8>) -> Option<Rank> {
         let rank = Rank::from_u8(f(&mut self.range)?);
-        Some(unsafe{ rank.unwrap_unchecked() })
+        Some(unsafe { rank.unwrap_unchecked() })
     }
 }
 
@@ -412,7 +418,7 @@ impl core::fmt::Display for Pos {
 
 impl core::fmt::Display for File {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self .lower_letter())
+        write!(f, "{}", self.lower_letter())
     }
 }
 
@@ -497,9 +503,8 @@ impl Rank {
     }
 }
 
-
 #[test]
-fn test() { 
+fn test() {
     extern crate std;
     for i in b'a'..=b'h' {
         let file = File::from_u8(i - b'a').unwrap();
