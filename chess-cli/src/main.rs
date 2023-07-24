@@ -19,7 +19,7 @@ struct Args {
 
 #[derive(Clone, clap::Parser)]
 enum ArgKind {
-    OnBoard { board: Board },
+    OnBoard { board: Option<Board> },
     BotFight(bot_fight::Args),
     MakeBot(make_bot::Args),
 }
@@ -32,9 +32,10 @@ fn main() {
     match args.kind {
         ArgKind::BotFight(args) => bot_fight::main(args),
         ArgKind::MakeBot(args) => make_bot::main(args),
-        ArgKind::OnBoard { mut board } => {
+        ArgKind::OnBoard { board } => {
             let mut engine = Engine::default();
             let mut three_fold = ThreeFold::new();
+            let mut board = board.unwrap_or_else(Board::standard);
 
             loop {
                 eprintln!("{board}");

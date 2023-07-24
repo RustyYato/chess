@@ -398,6 +398,7 @@ impl Engine {
                 alpha=?args.alpha,
                 beta=?args.beta,
                 "move"=%mv,
+                was_capture,
                 board=%args.old_board,
                 "start alphabeta"
             );
@@ -418,7 +419,7 @@ impl Engine {
             return Score::Raw(0);
         }
 
-        let moves = board.legals();
+        let mut moves = board.legals();
 
         if moves.is_empty() {
             if board.in_check() {
@@ -482,7 +483,14 @@ impl Engine {
             return Score::Raw(0);
         }
 
-        if args.remaining_depth == 0 {
+        let mut is_complete = args.remaining_depth == 0;
+        if is_complete && was_capture {
+            moves.set_mask(board[!P::COLOR]);
+
+            is_complete = moves.is_empty()
+        }
+
+        if is_complete {
             let score = self.eval(&board, args.current_depth);
 
             tracing::trace!(
@@ -506,7 +514,7 @@ impl Engine {
         let mut args = AlphaBetaArgs {
             old_board: &board,
             timeout: args.timeout,
-            remaining_depth: args.remaining_depth - 1,
+            remaining_depth: args.remaining_depth.saturating_sub(1),
             current_depth: args.current_depth + 1,
             alpha: args.alpha,
             beta: args.beta,

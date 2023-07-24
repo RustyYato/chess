@@ -89,13 +89,13 @@ pub fn main(args: Args) {
             let mut moves = Vec::new();
 
             let result = loop {
-                let timeout = chess_engine::DurationTimeout::new(time_control);
                 let (bot, bot_id, opp_id) = match a.board().turn() {
                     chess_bitboard::Color::White => (&mut a,x,y),
                     chess_bitboard::Color::Black => (&mut b,y,x),
                 };
+                let timeout = chess_engine::DurationTimeout::new(time_control);
                 let (mv, _score) = bot.evaluate(&timeout);
-
+                
                 if let Some(mv) = mv {
                     moves.push(mv);
                     let res = a.make_move(mv);
