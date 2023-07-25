@@ -11,7 +11,7 @@ bishop-rays:
 lookup: rook-rays bishop-rays
 
 make-bot name:
-    cargo run -p chess-cli -- make-bot {{name}} --strip
+    cargo run -p chess-cli --features colorz/strip-colors --features tracing/max_level_off -- make-bot {{name}} --strip
 
 fight *bots:
     cargo run -p chess-cli -r -- bot-fight {{bots}} -g 200 -t 1ms -g 50 -t 10ms -g 50 -t 100ms --thread-count 24
