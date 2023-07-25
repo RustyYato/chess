@@ -3,7 +3,7 @@ use std::time::Duration;
 use chess_engine::{DurationTimeout, Engine, ThreeFold};
 use chess_movegen::Board;
 
-use rand::{prelude::IteratorRandom, Rng};
+use rand::Rng;
 
 mod bot_fight;
 mod logs;
