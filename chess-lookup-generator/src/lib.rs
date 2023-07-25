@@ -2,7 +2,7 @@ use chess_bitboard::{BitBoard, File, Pos, Rank};
 pub use magic::MagicTable;
 
 #[cfg(feature = "book")]
-pub mod book;
+pub mod eco_book;
 mod magic;
 
 pub fn rook_rays(pos: Pos) -> BitBoard {

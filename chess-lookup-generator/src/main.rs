@@ -38,7 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 #[cfg(feature = "book")]
 fn write_openning_book(target_dir: &Path) -> Result<(), Box<dyn Error>> {
     let mut book = BufWriter::new(File::create(target_dir.join("book.rs"))?);
-    let (book_data, names) = chess_lookup_generator::book::read_eco()?;
+    let (book_data, names) = chess_lookup_generator::eco_book::read_eco()?;
 
     write!(
         book,
