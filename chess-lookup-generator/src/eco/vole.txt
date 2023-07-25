@@ -1,0 +1,99 @@
+    E01: Catalan Opening, early deviations: 1. d4 Nf6 2. c4 e6 3. g3 d5
+    E02: Open Catalan with 5.Qa4+: 1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 dxc4 5. Qa4+
+    E03: Open Catalan, 5.Qa4+ Nbd7 6.Qxc4: 1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 dxc4 5. Qa4+ Nbd7 6. Qxc4
+    E04: Open Catalan, 5.Nf3: 1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 dxc4 5. Nf3
+    E05: Open Catalan, Classical: 1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 dxc4 5. Nf3 Be7
+    E06: Closed Catalan sidelines: 1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7
+    E07: Closed Catalan, 5.Nf3 O-O 6.O-O Nbd7: 1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. O-O Nbd7
+    E08: Closed Catalan, 7.Qc2: 1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. O-O Nbd7 7. Qc2
+    E09: Closed Catalan, Main Line: 1. d4 Nf6 2. c4 e6 3. g3 d5 4. Bg2 Be7 5. Nf3 O-O 6. O-O Nbd7 7. Qc2 c6 8. Nbd2
+    E10: Neo-Indian with 3.Nf3, sidelines: 1. d4 Nf6 2. c4 e6 3. Nf3
+    E11: Bogo-Indian Defence: 1. d4 Nf6 2. c4 e6 3. Nf3 Bb4+
+    E12: Queen's Indian Defence, early deviations: 1. d4 Nf6 2. c4 e6 3. Nf3 b6
+    E13: Queen's Indian Defence, 4.Nc3, Main Line: 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. Nc3 Be7 5. Bg5
+    E14: Queen's Indian Defence, 4.e3 : 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. e3
+    E15: Queen's Indian Defence, 4.g3 : 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3
+    E16: Queen's Indian Defence, 4.g3 Bb7 (without 5.Bg2 or 5...Be7): 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Bb7
+    E17: Queen's Indian Defence, 5.Bg2 Be7: 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Bb7 5. Bg2 Be7
+    E18: Queen's Indian Defence, 7.Nc3: 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Bb7 5. Bg2 Be7 6. O-O O-O 7. Nc3
+    E19 Queen's Indian, Old Main Line, 8.Qc2: 1. d4 Nf6 2. c4 e6 3. Nf3 b6 4. g3 Bb7 5. Bg2 Be7 6. O-O O-O 7. Nc3 Ne4 8. Qc2
+    E20 Neo-Indian with 3.Nc3, sidelines (including early deviations after 3...Bb4, i.e. after Nimzo-Indian Defence): 1. d4 Nf6 2. c4 e6 3. Nc3
+    E21 Nimzo-Indian, Three Knights Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Nf3
+    E22 Nimzo-Indian, Spielmann Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qb3
+    E23 Nimzo-Indian, Spielmann, 4...c5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qb3 c5
+    E24 Nimzo-Indian, Sämisch Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. a3
+    E25 Nimzo-Indian, Sämisch, 5.bxc3 c5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. a3 Bxc3+ 5. bxc3 c5
+    E26 Nimzo-Indian, Sämisch, 5.bxc3 c5 6.e3: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. a3 Bxc3+ 5. bxc3 c5 6. e3
+    E27 Nimzo-Indian, Sämisch, 5.bxc3 O-O: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. a3 Bxc3+ 5. bxc3 O-O
+    E28 Nimzo-Indian, Sämisch, 5.bxc3 O-O 6.e3: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. a3 Bxc3+ 5. bxc3 O-O 6. e3
+    E29 Nimzo-Indian, Sämisch, 5...O-O 6.e3 c5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. a3 Bxc3+ 5. bxc3 O-O 6. e3 c5
+    E30 Nimzo-Indian, Leningrad Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Bg5
+    E31 Nimzo-Indian, Leningrad, Main Line: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Bg5 h6 5. Bh4 c5 6. d5 d6
+    E32 Nimzo-Indian, Classical Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2
+    E33 Nimzo-Indian, Classical, 4...Nc6: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 Nc6
+    E34 Nimzo-Indian, Classical, Noa Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 d5
+    E35 Nimzo-Indian, Classical, Noa, Exchange Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 d5 5. cxd5 exd5
+    E36 Nimzo-Indian, Classical, Noa, 5.a3: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 d5 5. a3
+    E37 Nimzo-Indian, Classical, Noa, Main Line: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 d5 5. a3 Bxc3+ 6. Qxc3 Ne4
+    E38 Nimzo-Indian, Classical, 4...c5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 c5
+    E39 Nimzo-Indian, Classical, Pirc Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. Qc2 c5 5. dxc5 O-O
+    E40 Nimzo-Indian with 4.e3 (Rubinstein System), early deviations: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3
+    E41 Nimzo-Indian, 4.e3 c5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 c5
+    E42 Nimzo-Indian, Rubinstein Variation, Main Line: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 c5 5. Ne2
+    E43 Nimzo-Indian, 4.e3 b6 (Nimzowitsch System): 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 b6
+    E44 Nimzo-Indian, 4.e3 b6 5.Ne2: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 b6 5. Ne2
+    E45 Nimzo-Indian, Fischer Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 b6 5. Ne2 Ba6
+    E46 Nimzo-Indian, 4.e3 O-O: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O
+    E47 Nimzo-Indian, 4.e3 O-O 5.Bd3: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Bd3
+    E48 Nimzo-Indian, 4.e3 O-O 5.Bd3 d5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Bd3 d5
+    E49 Nimzo-Indian, 4.e3 O-O 5.Bd3 d5 6.a3 (Botvinnik Variation Deferred): 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Bd3 d5 6. a3
+    E50 Nimzo-Indian, 4.e3 O-O, 5.Nf3, without 5...d5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3
+    E51 Nimzo-Indian, 4.e3 O-O, 5.Nf3 d5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5
+    E52 Nimzo-Indian, 4.e3, Classical Main Line with 6...b6: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 b6
+    E53 Nimzo-Indian, 4.e3, Classical Main Line with 6...c5: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5
+    E54 Nimzo-Indian, 4.e3, Gligoric System, 7...dxc4 8.Bxc4: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O dxc4 8. Bxc4
+    E55 Nimzo-Indian, 4.e3, Gligoric System, Bronstein Variation: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O dxc4 8. Bxc4 Nbd7
+    E56 Nimzo-Indian, 4.e3, Classical Main Line with 7...Nc6: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O Nc6
+    E57 Nimzo-Indian, 4.e3, Classical Main Line with 8...dxc4, 9...Bxc4 cxd4: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O Nc6 8. a3 dxc4 9. Bxc4 cxd4
+    E58 Nimzo-Indian, 4.e3, Classical Main Line with 8...Bxc3: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O Nc6 8. a3 Bxc3 9. bxc3
+    E59 Nimzo-Indian, 4.e3, Classical Main Line: 1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Nf3 d5 6. Bd3 c5 7. O-O Nc6 8. a3 Bxc3 9. bxc3 dxc4 10. Bxc4
+    E60 King's Indian Defence, various early moves: 1. d4 Nf6 2. c4 g6
+    E61 King's Indian Defence with 3.Nc3, early deviations: 1. d4 Nf6 2. c4 g6 3. Nc3
+    E62 King's Indian, Fianchetto Variation, sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. Nf3 d6 5. g3
+    E63 King's Indian, Fianchetto, 6.Bg2 Nc6: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. Nf3 d6 5. g3 O-O 6. Bg2 Nc6 7. O-O a6
+    E64 King's Indian, Fianchetto, Yugoslav System: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. Nf3 d6 5. g3 O-O 6. Bg2 c5
+    E65 King's Indian, Yugoslav, 7.O-O: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. Nf3 d6 5. g3 O-O 6. Bg2 c5 7. O-O
+    E66 King's Indian, Fianchetto, Yugoslav Panno: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. Nf3 d6 5. g3 O-O 6. Bg2 c5 7. O-O Nc6 8. d5
+    E67 King's Indian, Fianchetto with 6...Nbd7: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. Nf3 d6 5. g3 O-O 6. Bg2 Nbd7
+    E68 King's Indian, Fianchetto, Classical Variation, 8.e4: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. Nf3 d6 5. g3 O-O 6. Bg2 Nbd7 7. O-O e5 8. e4
+    E69 King's Indian, Fianchetto, Classical, Main Line: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. Nf3 d6 5. g3 O-O 6. Bg2 Nbd7 7. O-O e5 8. e4 c6 9. h3
+    E70 King's Indian with 4.e4, early deviations: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4
+    E71 King's Indian, Makogonov System: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. h3
+    E72 King's Indian, 4.e4 d6 5.g3: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. g3
+    E73 King's Indian, 5.Be2: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Be2
+    E74 King's Indian, Averbakh, 6...c5: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Be2 O-O 6. Bg5 c5
+    E75 King's Indian, Averbakh, Main Line: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Be2 O-O 6. Bg5 c5 7. d5 e6
+    E76 King's Indian Defence, Four Pawns Attack: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f4
+    E77 King's Indian, Four Pawns Attack, 6.Be2: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f4 O-O 6. Be2
+    E78 King's Indian, Four Pawns Attack, 6.Be2 c5 7.Nf3: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f4 O-O 6. Be2 c5 7. Nf3
+    E79 King's Indian, Four Pawns Attack, Main Line: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f4 O-O 6. Be2 c5 7. Nf3 cxd4 8. Nxd4 Nc6
+    E80 King's Indian, Sämisch Variation, sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3
+    E81 King's Indian, Sämisch, 5...O-O: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O
+    E82 King's Indian, Sämisch, Double Fianchetto Variation: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 b6
+    E83 King's Indian, Sämisch, 6...Nc6: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 Nc6
+    E84 King's Indian, Sämisch, Panno Main Line: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 Nc6 7. Nge2 a6 8. Qd2 Rb8
+    E85 King's Indian, Sämisch, Orthodox Variation: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 e5
+    E86 King's Indian, Sämisch, Orthodox, 7.Nge2 c6: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 e5 7. Nge2 c6
+    E87 King's Indian, Sämisch, Orthodox, 7.d5: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 e5 7. d5
+    E88 King's Indian, Sämisch, Orthodox, 7.d5 c6: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 e5 7. d5 c6
+    E89 King's Indian, Sämisch, Orthodox, Main Line: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. f3 O-O 6. Be3 e5 7. d5 c6 8. Nge2
+    E90 King's Indian with 5.Nf3, sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3
+    E91 King's Indian, 5.Nf3 O-O 6.Be2: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2
+    E92 King's Indian, Classical Variation, sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5
+    E93 King's Indian, Classical, Petrosian System, Main Line: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. d5 Nbd7
+    E94 King's Indian, Orthodox Variation: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O
+    E95 King's Indian, Orthodox, 7...Nbd7: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nbd7
+    E96 King's Indian, Orthodox, 7...Nbd7 8.Re1: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nbd7 8. Re1
+    E97 King's Indian, Orthodox, Mar del Plata Variation: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nc6
+    E98 King's Indian, Orthodox, Mar del Plata, 9.Ne1: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nc6 8. d5 Ne7 9. Ne1
+    E99 King's Indian, Orthodox, Mar del Plata, Main Line: 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nc6 8. d5 Ne7 9. Ne1 Nd7 10. f3

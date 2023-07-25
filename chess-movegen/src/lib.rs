@@ -98,7 +98,7 @@ impl PartialEq for Board {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ChessMove {
     pub source: Pos,
     pub dest: Pos,

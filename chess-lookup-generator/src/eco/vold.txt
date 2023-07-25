@@ -1,0 +1,114 @@
+    D01: Veresov Opening: 1. d4 d5 2. Nc3 Nf6 3. Bg5
+    D02: 1.d4 d5 2.Nf3 sidelines: 1. d4 d5 2. Nf3 (2...f5--A80)
+    D03: Torre System: 1. d4 d5 2. Nf3 Nf6 3. Bg5
+    D04: Colle System: 1. d4 d5 2. Nf3 Nf6 3. e3
+    D05: Colle System with ...e6: 1. d4 d5 2. Nf3 Nf6 3. e3 e6
+    D06: Queen's Gambit, Marshall Defence: 1. d4 d5 2. c4 Nf6 3. cxd5
+    D06: Queen's Gambit, Baltic Defence: 1. d4 d5 2. c4 Bf5
+    D07: Queen's Gambit, Chigorin Defence: 1. d4 d5 2. c4 Nc6
+    D08: Queen's Gambit, Albin Countergambit sidelines: 1. d4 d5 2. c4 e5
+    D09: Queen's Gambit, Albin Countergambit main line: 1. d4 d5 2. c4 e5 3. dxe5 d4 4. Nf3 Nc6 5. g3
+    D10: Slav Defence sidelines: 1. d4 d5 2. c4 c6
+    D10: Slav Defence, Exchange Variation: 1. d4 d5 2. c4 c6 3. cxd5
+    D10: Slav Defence, Winawer Countergambit: 1. d4 d5 2. c4 c6 3. Nc3 e5
+    D11: Slav Defence, 3.Nf3 sidelines: 1. d4 d5 2. c4 c6 3. Nf3
+    ignore D11: Slav Defence, 3.Nf3 Nf6 4.e3 Bg4: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. e3 e3 Bg4
+    D12: Slav Defence, 4.e3 Bf5: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. e3 Bf5
+    D13: Slav Defence, Classical Exchange Variation without ...Bf5: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. cxd5 cxd5
+    D14: Slav Defence, Classical Exchange Variation main line: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. cxd5 cxd5 5. Nc3 Nc6 6. Bf4 Bf5
+    D15: Slav Defence 4.Nc3 a6: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 a6
+    D15: Slav Defence 4.Nc3 dxc4 gambit lines: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4
+    D16: Slav Defence, Smyslov System: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Na6
+    D16: Slav Defence, Bronstein System: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bg4
+    D17: Slav Defence, 5...Bf5 sidelines: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bf5
+    D17: Slav Defence, Carlsbad Variation: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bf5 6. Ne5 Nbd7 7. Nxc4 Qc7
+    D17: Slav Defence, Wiesbaden Variation: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bf5 6. Ne5 e6 7. f3
+    D18: Slav Defence, Euwe Variation without Qe2: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bf5 6. e3
+    D19: Slav Defence, Euwe Variation main line: 1. d4 d5 2. c4 c6 3. Nf3 Nf6 4. Nc3 dxc4 5. a4 Bf5 6. e3 e6 7. Bxc4 Bb4 8. O-O O-O 9. Qe2
+    D20: Queen's Gambit Accepted with 3.e3: 1. d4 d5 2. c4 dxc4 3. e3
+    D20: Queen's Gambit Accepted with 3.e4: 1. d4 d5 2. c4 dxc4 3. e4
+    D21: Queen's Gambit Accepted, 3.Nf3 sidelines: 1. d4 d5 2. c4 dxc4 3. Nf3
+    D22: Queen's Gambit Accepted, 3.Nf3 a6 4.e3: 1. d4 d5 2. c4 dxc4 3. Nf3 a6 4. e3
+    D23: Queen's Gambit Accepted, 3.Nf3 Nf6 sidelines: 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6
+    D24: Queen's Gambit Accepted, 3.Nf3 Nf6 4.Nc3: 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6 4. Nc3
+    D25: Queen's Gambit Accepted, 4.e3 sidelines: 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6 4. e3
+    D26: Queen's Gambit Accepted, 4.e3 e6 5.Bxc4 c5 sidelines: 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6 4. e3 e6 5. Bxc4 c5
+    D27: Queen's Gambit Accepted, Classical main line with 7.e4!?: 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6 4. e3 e6 5. Bxc4 c5 6. O-O a6 7. e4
+    D27: Queen's Gambit Accepted, Classical main line with 7.a4: 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6 4. e3 e6 5. Bxc4 c5 6. O-O a6 7. a4
+    D28: Queen's Gambit Accepted, Classical main line with 7.Qe2 and early ...Nc6: 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6 4. e3 e6 5. Bxc4 c5 6. O-O a6 7. Qe2 Nc6
+    D29: Queen's Gambit Accepted, Classical main line with 7.Qe2 and early ...Nbd7: 1. d4 d5 2. c4 dxc4 3. Nf3 Nf6 4. e3 e6 5. Bxc4 c5 6. O-O a6 7. Qe2 b5 8. Bb3 Bb7 9. Rd1 Nbd7
+    D30: Queen's Gambit Declined without 3.Nc3: 1. d4 d5 2. c4 e6
+    D31: Queen's Gambit Declined, Alatortsev Variation: 1. d4 d5 2. c4 e6 3. Nc3 Be7
+    D31: Semi-Slav without ...Nf6: 1. d4 d5 2. c4 e6 3. Nc3 c6
+    D32: Tarrasch Defence sidelines: 1. d4 d5 2. c4 e6 3. Nc3 c5
+    D33: Tarrasch Defence, 6.g3 sidelines: 1. d4 d5 2. c4 e6 3. Nc3 c5 4. cxd5 exd5 5. Nf3 Nc6 6. g3
+    D34: Tarrasch Defence, 6.g3 Nf6 7.Bg2 Be7: 1. d4 d5 2. c4 e6 3. Nc3 c5 4. cxd5 exd5 5. Nf3 Nc6 6. g3 Nf6 7. Bg2 Be7
+    D35: Queen's Gambit Declined, early deviations: 1. d4 d5 2. c4 e6 3. Nc3 Nf6
+    D35: Queen's Gambit Declined, Exchange Variation: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. cxd5 exd5
+    D36: Queen's Gambit Declined, Exchange Variation main line: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. cxd5 exd5 5. Bg5 Be7 6. Qc2
+    D37: Queen's Gambit Declined with 5.Bf4: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 Be7 5. Bf4
+    D38: Queen's Gambit Declined, Ragozin Defence: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 Bb4
+    D39: Queen's Gambit Declined, Ragozin Defence with 5.Bg5 dxc4: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 Bb4 5. Bg5 dxc4
+    D40: Queen's Gambit Declined, Semi-Tarrasch Defence: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c5
+    D41: Queen's Gambit Declined, Semi-Tarrasch Defence with 5.cxd5: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c5 5. cxd5 Nxd5
+    D42: Queen's Gambit Declined, Semi-Tarrasch Defence main line: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c5 5. cxd5 Nxd5 6. e3 Nc6 7. Bd3
+    D43: Semi-Slav, 5.Bg5 h6: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. Bg5 h6
+    D44: Semi-Slav, Botvinnik Variation: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. Bg5 dxc4 6. e4 b5 7. e5 h6 8. Bh4 g5 9. Nxg5 hxg5 10. Bxg5
+    D45: Semi-Slav, 5.e3: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. e3
+    D46: Semi-Slav, 5.e3 Nbd7 6.Bd3 where Black avoids the Meran: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. e3 Nbd7 6. Bd3
+    D47: Semi-Slav, Meran System sidelines: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. e3 Nbd7 6. Bd3 dxc4 7. Bxc4
+    D48: Semi-Slav, Meran System without early ...c5: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. e3 Nbd7 6. Bd3 dxc4 7. Bxc4 b5 8. Bd3 a6 9. O-O
+    D49: Semi-Slav, Meran System main line: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3 c6 5. e3 Nbd7 6. Bd3 dxc4 7. Bxc4 b5 8. Bd3 a6 9. e4 c5 10. e5 cxd4 11. Nxb5 axb5 12. exf6 gxf6
+    D50: Queen's Gambit Declined, Dutch-Peruvian Gambit: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 c5
+    D50: Queen's Gambit Declined, Orthodox Variation sidelines: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5
+    D51: Queen's Gambit Declined, 4.Bg5 Nbd7 sidelines: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Nbd7
+    D52: Queen's Gambit Declined, Cambridge Springs Variation: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Nbd7 5. e3 c6 6. Nf3 Qa5
+    D53: Queen's Gambit Declined, Orthodox Variation early deviations: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7
+    D54: Queen's Gambit Declined, Orthodox Variation without Nf3: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Rc1
+    D55: Queen's Gambit Declined, Orthodox Variation without ...h6: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3
+    D56: Queen's Gambit Declined, Lasker Variation sidelines: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 h6 7. Bh4 Ne4
+    D57: Queen's Gambit Declined, Lasker Variation main line: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 h6 7. Bh4 Ne4 8. Bxe7 Qxe7 9. cxd5 exd5
+    D58: Queen's Gambit Declined, Tartakower Defence sidelines: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 h6 7. Bh4 b6
+    D59: Queen's Gambit Declined, Tartakower Defence main line: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 h6 7. Bh4 b6 8. cxd5 Nxd5
+    D60: Queen's Gambit Declined, Classical Variation with unusual White seventh moves: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7
+    D61: Queen's Gambit Declined, Classical Variation with 7.Qc2: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Qc2
+    D62: Queen's Gambit Declined, Classical Variation with 7.Qc2 c5 8.cxd5: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Qc2 c5 8. cxd5
+    D63: Queen's Gambit Declined, Classical Variation with 7.Rc1: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Rc1
+    D64: Queen's Gambit Declined, Classical Variation with 7.Rc1 c6 8.Qc2: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Rc1 c6 8. Qc2
+    D65: Queen's Gambit Declined, Classical Variation with 7.Rc1 c6 8.Qc2 a6 9.cxd5: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Rc1 c6 8. Qc2 a6 9. cxd5
+    D66: Queen's Gambit Declined, Classical Variation main line: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Rc1 c6 8. Bd3
+    D67: Queen's Gambit Declined, 9...Nd5: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Rc1 c6 8. Bd3 dxc4 9. Bxc4 Nd5
+    D68: Queen's Gambit Declined, Capablanca's Freeing Maneuver: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Rc1 c6 8. Bd3 dxc4 9. Bxc4 Nd5 10. Bxe7 Qxe7 11. O-O Nxc3 12. Rxc3 e5
+    D69: Queen's Gambit Declined, Capablanca's Freeing Maneuver main line: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Nf3 Nbd7 7. Rc1 c6 8. Bd3 dxc4 9. Bxc4 Nd5 10. Bxe7 Qxe7 11. O-O Nxc3 12. Rxc3 e5 13. dxe5
+    ignore D70: Grünfeld Defence, unusual White third moves met by 3...d5: 1. d4 Nf6 2. c4 g6 (3.Nc3--E60-E99)
+    D71: Grünfeld Defence, Fianchetto Variation sidelines: 1. d4 Nf6 2. c4 g6 3. g3 d5
+    D72: Grünfeld Defence, Fianchetto Variation without Nf3: 1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. cxd5 Nxd5 6. e4
+    D73: Grünfeld Defence, Fianchetto Variation with 5.Nf3 sidelines: 1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3
+    D74: Grünfeld Defence, Fianchetto Variation with 5.Nf3 O-O main line: 1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. cxd5 Nxd5 7. O-O
+    D75: Grünfeld Defence, Fianchetto Variation with 5.Nf3 O-O 6.cxd5 Nxd5 7.Nc3 c5: 1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. cxd5 Nxd5 7. Nc3 c5
+    D76: Grünfeld Defence, Fianchetto Variation main line with 7.O-O Nb6: 1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. cxd5 Nxd5 7. O-O Nb6
+    D77: Grünfeld Defence, Fianchetto Variation 6.O-O without 6...c6: 1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. O-O
+    D78: Grünfeld Defence, Fianchetto Variation with 6.O-O c6: 1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 Bg7 5. Nf3 O-O 6. O-O c6
+    ignore D79: Grünfeld Defence, Symmetrical Variation: 1. d4 Nf6 2. c4 g6 3. g3 d5 4. Bg2 d5 5. Nf3 O-O 6. O-O c6 7. cxd5 cxd5
+    D80: Grünfeld Defence, unusual White fourth moves: 1. d4 Nf6 2. c4 g6 3. Nc3 d5
+    D80: Grünfeld Defence, 4.Bg5: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Bg5
+    D81: Grünfeld Defence, Accelerated Russian System: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Qb3
+    D82: Grünfeld Defence, 4.Bf4: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Bf4
+    D83: Grünfeld Defence, 4.Bf4 Bg7 5.e3 O-O: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Bf4 Bg7 5. e3 O-O
+    D84: Grünfeld Defence, 4.Bf4 Bg7 5.e3 O-O 6.cxd5: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Bf4 Bg7 5. e3 O-O 6. cxd5
+    D85: Grünfeld Defence, Nadanian Variation: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. Na4
+    D85: Grünfeld Defence, Exchange Variation with 7.Nf3: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. e4 Nxc3 6. bxc3 Bg7 7. Nf3
+    D86: Grünfeld Defence, Classical Exchange Variation sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. e4 Nxc3 6. bxc3 Bg7 7. Bc4
+    D87: Grünfeld Defence, Classical Exchange Variation without ...cxd4: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. e4 Nxc3 6. bxc3 Bg7 7. Bc4 c5 8. Ne2 O-O 9. O-O
+    ignore D88: Grünfeld Defence, Classical Exchange Variation with 10.Be3 cxd4 11.cxd4: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. e4 Nxc3 6. bxc3 Bg7 7. Bc4 c5 8. Ne2 O-O 9. O-O
+    D89: Grünfeld Defence, Classical Exchange Variation main line: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. cxd5 Nxd5 5. e4 Nxc3 6. bxc3 Bg7 7. Bc4 c5 8. Ne2 O-O 9. O-O Nc6 10. Be3 cxd4 11. cxd4 Bg4 12. f3 Na5 13. Bd3
+    D90: Grünfeld Defence, 4.Nf3 Bg7 sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7
+    D91: Grünfeld Defence, 4.Nf3 Bg7 5.Bg5: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Bg5
+    D92: Grünfeld Defence, 4.Nf3 Bg7 5.Bf4 sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Bf4
+    D93: Grünfeld Defence, 4.Nf3 Bg7 5.Bf4 main line: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Bf4 O-O 6. e3
+    D94: Grünfeld Defence, Closed Variation sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. e3
+    D95: Grünfeld Defence, Closed Variation main line: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. e3 O-O 6. Qb3
+    D96: Grünfeld Defence, Russian System sidelines: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Qb3
+    D97: Grünfeld Defence, Russian System main line without 7...Bg4: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Qb3 dxc4 6. Qxc4 O-O 7. e4
+    D98: Grünfeld Defence, Russian System, Smyslov Variation: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Qb3 dxc4 6. Qxc4 O-O 7. e4 Bg4 8. Be3 Nfd7
+    D99: Grünfeld Defence, Russian System main line: 1. d4 Nf6 2. c4 g6 3. Nc3 d5 4. Nf3 Bg7 5. Qb3 dxc4 6. Qxc4 O-O 7. e4 Bg4 8. Be3 Nfd7 9. Qb3

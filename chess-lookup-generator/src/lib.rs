@@ -1,6 +1,7 @@
 use chess_bitboard::{BitBoard, File, Pos, Rank};
 pub use magic::MagicTable;
 
+pub mod book;
 mod magic;
 
 pub fn rook_rays(pos: Pos) -> BitBoard {

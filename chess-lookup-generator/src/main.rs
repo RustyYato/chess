@@ -28,6 +28,26 @@ fn main() -> Result<(), Box<dyn Error>> {
     write_bishop_moves(target_dir)?;
     write_rook_moves(target_dir)?;
     write_zobrist(target_dir)?;
+    write_openning_book(target_dir)?;
+
+    Ok(())
+}
+
+fn write_openning_book(target_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let mut book = BufWriter::new(File::create(target_dir.join("book.rs"))?);
+    let (book_data, names) = chess_lookup_generator::book::read_eco()?;
+
+    write!(
+        book,
+        "
+pub(super) const BOOK_SIZE: usize = {0};
+pub(super) static BOOK: [u16; {0}] = {1:?};
+pub(super) static BOOK_NAMES: [&str; {2}] = {3:?};",
+        book_data.len(),
+        book_data,
+        names.len(),
+        names,
+    )?;
 
     Ok(())
 }

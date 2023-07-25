@@ -5,6 +5,7 @@ use chess_bitboard::{BitBoard, Color, File, Piece, Pos, Rank};
 mod between;
 mod bishop_moves;
 mod bishop_rays;
+mod book;
 mod king_moves;
 mod knight_moves;
 mod line;
@@ -213,6 +214,74 @@ pub const KINGSIDE_CASTLE_SAFE_FILES: BitBoard =
     BitBoard::from_file(File::F).or(BitBoard::from_file(File::G));
 pub const QUEENSIDE_CASTLE_SAFE_FILES: BitBoard =
     BitBoard::from_file(File::C).or(BitBoard::from_file(File::D));
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+pub struct BookIndex {
+    index: usize,
+}
+
+impl core::fmt::Debug for BookIndex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "book{}", self.index)
+    }
+}
+
+pub const START_BOOK_INDEX: BookIndex = BookIndex {
+    index: book::BOOK_SIZE - 1,
+};
+
+pub fn book_move(current: BookIndex) -> BookMoves {
+    BookMoves {
+        index: current.index,
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct BookMove {
+    pub children: BookIndex,
+    pub source: Pos,
+    pub dest: Pos,
+}
+
+#[derive(Clone)]
+pub struct BookMoves {
+    index: usize,
+}
+
+impl Iterator for BookMoves {
+    type Item = BookMove;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let offset = unsafe { *book::BOOK.get_unchecked(self.index) } as usize;
+        if offset == 0 {
+            return None;
+        }
+
+        let mv = unsafe { *book::BOOK.get_unchecked(self.index - 1) } as usize;
+        let child_index = self.index - 2;
+        self.index = self.index.checked_sub(offset + 1)?;
+
+        let source = Pos::from_u8((mv & 0x3f) as u8).unwrap();
+        let dest = Pos::from_u8(((mv >> 6) & 0x3f) as u8).unwrap();
+
+        Some(BookMove {
+            source,
+            dest,
+            children: BookIndex { index: child_index },
+        })
+    }
+}
+
+#[test]
+fn test_all_book_indices() {
+    fn walk(index: BookIndex) {
+        for x in book_move(index) {
+            walk(x.children);
+        }
+    }
+
+    walk(START_BOOK_INDEX);
+}
 
 #[test]
 fn test_adjacent() {
