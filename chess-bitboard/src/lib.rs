@@ -42,14 +42,14 @@ impl BitBoard {
 
     #[inline(always)]
     pub const fn from_file(file: File) -> Self {
-        const FIRST_FILE: u64 = 0xff;
-        Self(FIRST_FILE << (file as u8 * 8))
+        const FIRST_FILE: u64 = 0x0101010101010101;
+        Self(FIRST_FILE << file as u8)
     }
 
     #[inline(always)]
     pub const fn from_rank(rank: Rank) -> Self {
-        const FIRST_RANK: u64 = 0x0101010101010101;
-        Self(FIRST_RANK << rank as u8)
+        const FIRST_RANK: u64 = 0xff;
+        Self(FIRST_RANK << (rank as u8 * 8))
     }
 
     #[inline(always)]
@@ -105,25 +105,25 @@ impl BitBoard {
     #[inline(always)]
     pub const fn shift_up(self) -> Self {
         let board = self.diff(Self::from_rank(Rank::_8));
-        Self(board.0 << 1)
+        Self(board.0 << 8)
     }
 
     #[inline(always)]
     pub const fn shift_down(self) -> Self {
         let board = self.diff(Self::from_rank(Rank::_1));
-        Self(board.0 >> 1)
+        Self(board.0 >> 8)
     }
 
     #[inline(always)]
     pub const fn shift_left(self) -> Self {
         let board = self.diff(Self::from_file(File::A));
-        Self(board.0 >> 8)
+        Self(board.0 >> 1)
     }
 
     #[inline(always)]
     pub const fn shift_right(self) -> Self {
         let board = self.diff(Self::from_file(File::H));
-        Self(board.0 << 8)
+        Self(board.0 << 1)
     }
 
     #[inline(always)]
@@ -265,5 +265,78 @@ impl From<u64> for BitBoard {
     #[inline]
     fn from(value: u64) -> Self {
         BitBoard::from_u64(value)
+    }
+}
+
+impl<T: Into<BitBoard>> From<Option<T>> for BitBoard {
+    fn from(value: Option<T>) -> Self {
+        match value {
+            Some(x) => x.into(),
+            None => BitBoard::empty(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{BitBoard, File, Pos, Rank};
+
+    #[test]
+    fn test_from_file() {
+        for file in File::all() {
+            assert_eq!(BitBoard::from_iter(file), BitBoard::from(file));
+            assert!(BitBoard::from(file).iter().eq(file))
+        }
+    }
+
+    #[test]
+    fn test_from_rank() {
+        for rank in Rank::all() {
+            assert_eq!(BitBoard::from_iter(rank), BitBoard::from(rank));
+            assert!(BitBoard::from(rank).iter().eq(rank))
+        }
+    }
+
+    #[test]
+    fn test_from_pos() {
+        for pos in Pos::all() {
+            assert_eq!(
+                BitBoard::from(pos.file()) & BitBoard::from(pos.rank()),
+                BitBoard::from(pos)
+            );
+            assert!(BitBoard::from(pos).iter().eq([pos]))
+        }
+    }
+
+    #[test]
+    fn test_shift_up() {
+        for pos in Pos::all() {
+            let board = BitBoard::from(pos);
+            assert_eq!(board.shift_up(), BitBoard::from(pos.shift_up()));
+        }
+    }
+
+    #[test]
+    fn test_shift_down() {
+        for pos in Pos::all() {
+            let board = BitBoard::from(pos);
+            assert_eq!(board.shift_down(), BitBoard::from(pos.shift_down()));
+        }
+    }
+
+    #[test]
+    fn test_shift_left() {
+        for pos in Pos::all() {
+            let board = BitBoard::from(pos);
+            assert_eq!(board.shift_left(), BitBoard::from(pos.shift_left()));
+        }
+    }
+
+    #[test]
+    fn test_shift_right() {
+        for pos in Pos::all() {
+            let board = BitBoard::from(pos);
+            assert_eq!(board.shift_right(), BitBoard::from(pos.shift_right()));
+        }
     }
 }

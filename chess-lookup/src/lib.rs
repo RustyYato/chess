@@ -193,16 +193,33 @@ pub const PROMOTION_RANK: [Rank; 2] = [Rank::_8, Rank::_1];
 pub const PAWN_DOUBLE_MOVE_SOURCE_RANK: [Rank; 2] = [Rank::_2, Rank::_7];
 pub const PAWN_DOUBLE_MOVE_DEST_RANK: [Rank; 2] = [Rank::_4, Rank::_5];
 
-pub static ADJACENT_FILES: [BitBoard; 8] = [
-    BitBoard::from_file(File::B),
-    BitBoard::from_file(File::A).or(BitBoard::from_file(File::C)),
-    BitBoard::from_file(File::B).or(BitBoard::from_file(File::D)),
-    BitBoard::from_file(File::E).or(BitBoard::from_file(File::C)),
-    BitBoard::from_file(File::F).or(BitBoard::from_file(File::D)),
-    BitBoard::from_file(File::E).or(BitBoard::from_file(File::G)),
-    BitBoard::from_file(File::F).or(BitBoard::from_file(File::H)),
-    BitBoard::from_file(File::G),
-];
+pub static ADJACENT_FILES: [BitBoard; 8] = {
+    let mut files = [BitBoard::empty(); 8];
+
+    let mut i = 0;
+
+    while i < 8 {
+        let board = BitBoard::from_file(File::const_from_u8(i as u8));
+        files[i] = board.shift_left().or(board.shift_right());
+        i += 1;
+    }
+
+    files
+};
+
+pub static ADJACENT_RANKS: [BitBoard; 8] = {
+    let mut ranks = [BitBoard::empty(); 8];
+
+    let mut i = 0;
+
+    while i < 8 {
+        let board = BitBoard::from_rank(Rank::const_from_u8(i as u8));
+        ranks[i] = board.shift_up().or(board.shift_down());
+        i += 1;
+    }
+
+    ranks
+};
 
 pub const KINGSIDE_CASTLE_FILES: BitBoard =
     BitBoard::from_file(File::F).or(BitBoard::from_file(File::G));
@@ -277,24 +294,18 @@ impl Iterator for BookMovesIter {
     }
 }
 
-#[test]
-fn test_all_book_indices() {
-    fn walk(book_moves: BookMoves) {
-        for x in book_moves {
-            walk(x.children);
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_all_book_indices() {
+        fn walk(book_moves: BookMoves) {
+            for x in book_moves {
+                walk(x.children);
+            }
         }
-    }
 
-    walk(INITIAL_BOOOK_MOVES);
-}
-
-#[test]
-fn test_adjacent() {
-    for file in File::all() {
-        let file_bb = BitBoard::from(file);
-        assert_eq!(
-            ADJACENT_FILES[file],
-            file_bb.shift_left() | file_bb.shift_right()
-        )
+        walk(INITIAL_BOOOK_MOVES);
     }
 }

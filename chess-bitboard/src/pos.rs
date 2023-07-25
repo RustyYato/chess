@@ -73,6 +73,46 @@ impl Pos {
     }
 
     #[inline(always)]
+    pub const fn const_from_u8(pos: u8) -> Self {
+        match Self::from_u8(pos) {
+            Some(x) => x,
+            None => unreachable!(),
+        }
+    }
+
+    #[inline(always)]
+    pub const fn shift_up(self) -> Option<Self> {
+        match self.rank().shift_up() {
+            Some(rank) => Some(Self::new(self.file(), rank)),
+            None => None,
+        }
+    }
+
+    #[inline(always)]
+    pub const fn shift_down(self) -> Option<Self> {
+        match self.rank().shift_down() {
+            Some(rank) => Some(Self::new(self.file(), rank)),
+            None => None,
+        }
+    }
+
+    #[inline(always)]
+    pub const fn shift_left(self) -> Option<Self> {
+        match self.file().shift_left() {
+            Some(file) => Some(Self::new(file, self.rank())),
+            None => None,
+        }
+    }
+
+    #[inline(always)]
+    pub const fn shift_right(self) -> Option<Self> {
+        match self.file().shift_right() {
+            Some(file) => Some(Self::new(file, self.rank())),
+            None => None,
+        }
+    }
+
+    #[inline(always)]
     pub const fn file(self) -> File {
         match File::from_u8(self as u8 % 8) {
             Some(rank) => rank,
@@ -101,8 +141,8 @@ impl Pos {
 
 impl File {
     #[inline(always)]
-    pub const fn from_u8(pos: u8) -> Option<Self> {
-        Some(match pos {
+    pub const fn from_u8(file: u8) -> Option<Self> {
+        Some(match file {
             0 => File::A,
             1 => File::B,
             2 => File::C,
@@ -113,6 +153,34 @@ impl File {
             7 => File::H,
             8.. => return None,
         })
+    }
+
+    #[inline(always)]
+    pub const fn const_from_u8(file: u8) -> Self {
+        match Self::from_u8(file) {
+            Some(x) => x,
+            None => unreachable!(),
+        }
+    }
+
+    #[inline(always)]
+    pub const fn shift_left(self) -> Option<Self> {
+        let x = self as u8;
+        if x == 0 {
+            None
+        } else {
+            Some(Self::const_from_u8(x - 1))
+        }
+    }
+
+    #[inline(always)]
+    pub const fn shift_right(self) -> Option<Self> {
+        let x = self as u8;
+        if x == 7 {
+            None
+        } else {
+            Some(Self::const_from_u8(x + 1))
+        }
     }
 
     #[inline(always)]
@@ -160,8 +228,8 @@ impl File {
 
 impl Rank {
     #[inline(always)]
-    pub const fn from_u8(pos: u8) -> Option<Self> {
-        Some(match pos {
+    pub const fn from_u8(rank: u8) -> Option<Self> {
+        Some(match rank {
             0 => Rank::_1,
             1 => Rank::_2,
             2 => Rank::_3,
@@ -172,6 +240,34 @@ impl Rank {
             7 => Rank::_8,
             _ => return None,
         })
+    }
+
+    #[inline(always)]
+    pub const fn const_from_u8(rank: u8) -> Self {
+        match Self::from_u8(rank) {
+            Some(x) => x,
+            None => unreachable!(),
+        }
+    }
+
+    #[inline(always)]
+    pub const fn shift_down(self) -> Option<Self> {
+        let x = self as u8;
+        if x == 0 {
+            None
+        } else {
+            Some(Self::const_from_u8(x - 1))
+        }
+    }
+
+    #[inline(always)]
+    pub const fn shift_up(self) -> Option<Self> {
+        let x = self as u8;
+        if x == 7 {
+            None
+        } else {
+            Some(Self::const_from_u8(x + 1))
+        }
     }
 
     #[inline(always)]
