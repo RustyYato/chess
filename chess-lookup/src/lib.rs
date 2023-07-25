@@ -216,39 +216,44 @@ pub const QUEENSIDE_CASTLE_SAFE_FILES: BitBoard =
     BitBoard::from_file(File::C).or(BitBoard::from_file(File::D));
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct BookIndex {
+pub struct BookMoves {
     index: usize,
 }
 
-impl core::fmt::Debug for BookIndex {
+impl core::fmt::Debug for BookMoves {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "book{}", self.index)
     }
 }
 
-pub const START_BOOK_INDEX: BookIndex = BookIndex {
+pub const INITIAL_BOOOK_MOVES: BookMoves = BookMoves {
     index: book::BOOK_SIZE - 1,
 };
+pub const EMPTY_BOOK_MOVES: BookMoves = BookMoves { index: 0 };
 
-pub fn book_move(current: BookIndex) -> BookMoves {
-    BookMoves {
-        index: current.index,
+impl IntoIterator for BookMoves {
+    type Item = BookMove;
+    type IntoIter = BookMovesIter;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        BookMovesIter { index: self.index }
     }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct BookMove {
-    pub children: BookIndex,
+    pub children: BookMoves,
     pub source: Pos,
     pub dest: Pos,
 }
 
 #[derive(Clone)]
-pub struct BookMoves {
+pub struct BookMovesIter {
     index: usize,
 }
 
-impl Iterator for BookMoves {
+impl Iterator for BookMovesIter {
     type Item = BookMove;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -267,20 +272,20 @@ impl Iterator for BookMoves {
         Some(BookMove {
             source,
             dest,
-            children: BookIndex { index: child_index },
+            children: BookMoves { index: child_index },
         })
     }
 }
 
 #[test]
 fn test_all_book_indices() {
-    fn walk(index: BookIndex) {
-        for x in book_move(index) {
+    fn walk(book_moves: BookMoves) {
+        for x in book_moves {
             walk(x.children);
         }
     }
 
-    walk(START_BOOK_INDEX);
+    walk(INITIAL_BOOOK_MOVES);
 }
 
 #[test]
