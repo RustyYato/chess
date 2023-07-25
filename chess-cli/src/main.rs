@@ -3,6 +3,8 @@ use std::time::Duration;
 use chess_engine::{DurationTimeout, Engine, ThreeFold};
 use chess_movegen::Board;
 
+use rand::prelude::IteratorRandom;
+
 mod bot_fight;
 mod logs;
 mod make_bot;
@@ -35,7 +37,24 @@ fn main() {
         ArgKind::OnBoard { board } => {
             let mut engine = Engine::default();
             let mut three_fold = ThreeFold::new();
+            let mut book_moves = if board.is_none() {
+                chess_lookup::INITIAL_BOOOK_MOVES
+            } else {
+                chess_lookup::EMPTY_BOOK_MOVES
+            };
+
             let mut board = board.unwrap_or_else(Board::standard);
+
+            while let Some(mv) = book_moves.into_iter().choose(&mut rand::thread_rng()) {
+                eprintln!("{board:?}");
+
+                assert!(board.move_mut(chess_movegen::ChessMove {
+                    source: mv.source,
+                    dest: mv.dest,
+                    piece: None,
+                }));
+                book_moves = mv.children;
+            }
 
             loop {
                 eprintln!("{board}");
@@ -49,9 +68,9 @@ fn main() {
                 );
 
                 let Some(mv) = mv else {
-            println!("DRAW (MATERIAL)");
-            break;
-        };
+                    println!("DRAW (MATERIAL)");
+                    break;
+                };
                 // dbg!(start.elapsed());
                 assert!(board.move_mut(mv));
                 eprintln!(
