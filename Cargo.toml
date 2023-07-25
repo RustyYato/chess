@@ -33,3 +33,6 @@ features = ['supports-color', 'std']
 
 [profile.release]
 debug = true
+
+[profile.rust-analyzer]
+inherits = 'dev'

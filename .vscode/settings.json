@@ -1,0 +1,20 @@
+{
+    "rust-analyzer.cargo.buildScripts.overrideCommand": [
+        "cargo",
+        "check",
+        "--workspace",
+        "--message-format=json",
+        "--all-targets",
+        "--profile",
+        "rust-analyzer"
+    ],
+    "rust-analyzer.check.overrideCommand": [
+        "cargo",
+        "clippy",
+        "--workspace",
+        "--message-format=json",
+        "--all-targets",
+        "--profile",
+        "rust-analyzer"
+    ],
+}
