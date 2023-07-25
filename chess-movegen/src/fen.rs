@@ -119,6 +119,9 @@ pub fn parse_fen(mut s: &[u8]) -> Result<crate::Board, ParseFenError> {
 
         let dist = match out {
             Some(Ok((color, piece))) => {
+                #[cfg(test)]
+                board.set(color, piece, pos).unwrap();
+                #[cfg(not(test))]
                 board.set_unchecked(color, piece, pos);
                 zobrist ^= chess_lookup::zobrist(pos, piece, color);
                 1

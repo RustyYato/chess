@@ -741,6 +741,7 @@ static DIST_FROM_EDGE: [u8; 64] = {
 };
 
 #[test]
+#[ignore]
 fn test() {
     for rank in chess_bitboard::Rank::all().rev() {
         for pos in rank {

@@ -130,8 +130,8 @@ impl BitBoard {
     pub fn pop(&mut self) -> Option<Pos> {
         let pos = NonZeroU64::new(self.0)?;
         let zeros = pos.trailing_zeros() as u8;
+        self.0 ^= 1 << zeros;
         let pos = Pos::from_u8(zeros).unwrap();
-        *self ^= BitBoard::from_pos(pos);
         Some(pos)
     }
 
@@ -173,6 +173,11 @@ impl BitBoard {
     pub const fn some(self) -> bool {
         self.not().any()
     }
+
+    #[inline(always)]
+    pub const fn flip_ranks(self) -> Self {
+        Self(self.0.swap_bytes())
+    }
 }
 
 #[repr(transparent)]
@@ -194,6 +199,7 @@ impl Iterator for BitBoardIter {
         (remaining, Some(remaining))
     }
 
+    #[cfg(not(miri))]
     #[cfg(target_feature = "bmi2")]
     #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
     fn nth(&mut self, n: usize) -> Option<Self::Item> {

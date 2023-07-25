@@ -133,16 +133,16 @@ impl RawBoard {
     pub const fn standard() -> Self {
         Self {
             colors: [
-                BitBoard::from_u64(0x0303030303030303),
-                BitBoard::from_u64(0xc0c0c0c0c0c0c0c0),
+                BitBoard::from_u64(0x000000000000ffff),
+                BitBoard::from_u64(0xffff000000000000),
             ],
             pieces: [
-                BitBoard::from_u64(0x4242424242424242),
-                BitBoard::from_u64(0x0081000000008100),
-                BitBoard::from_u64(0x0000810000810000),
+                BitBoard::from_u64(0x00ff00000000ff00),
+                BitBoard::from_u64(0x4200000000000042),
+                BitBoard::from_u64(0x2400000000000024),
                 BitBoard::from_u64(0x8100000000000081),
-                BitBoard::from_u64(0x0000000081000000),
-                BitBoard::from_u64(0x0000008100000000),
+                BitBoard::from_u64(0x0800000000000008),
+                BitBoard::from_u64(0x1000000000000010),
             ],
         }
     }

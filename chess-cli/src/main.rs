@@ -27,6 +27,7 @@ enum ArgKind {
 }
 
 fn main() {
+
     let args: Args = clap::Parser::parse();
 
     logs::init(args.verbose as i8 - args.quiet as i8);

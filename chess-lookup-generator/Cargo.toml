@@ -5,11 +5,16 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+
+book = ['chess-movegen', 'pgn-reader']
+
 [dependencies.chess-bitboard]
 path = '../chess-bitboard'
 
 [dependencies.chess-movegen]
 path = '../chess-movegen'
+optional = true
 
 [dependencies.rand]
 version = '0.8'
@@ -17,3 +22,4 @@ features = ['small_rng']
 
 [dependencies.pgn-reader]
 version = '0.25'
+optional = true

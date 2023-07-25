@@ -7,14 +7,15 @@ use crate::Side;
 #[rustfmt::skip]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Pos {
-    A1,    A2,    A3,    A4,    A5,    A6,    A7,    A8,
-    B1,    B2,    B3,    B4,    B5,    B6,    B7,    B8,
-    C1,    C2,    C3,    C4,    C5,    C6,    C7,    C8,
-    D1,    D2,    D3,    D4,    D5,    D6,    D7,    D8,
-    E1,    E2,    E3,    E4,    E5,    E6,    E7,    E8,
-    F1,    F2,    F3,    F4,    F5,    F6,    F7,    F8,
-    G1,    G2,    G3,    G4,    G5,    G6,    G7,    G8,
-    H1,    H2,    H3,    H4,    H5,    H6,    H7,    H8,
+    A1, B1, C1, D1, E1, F1, G1, H1, 
+    A2, B2, C2, D2, E2, F2, G2, H2, 
+    A3, B3, C3, D3, E3, F3, G3, H3, 
+    A4, B4, C4, D4, E4, F4, G4, H4, 
+    A5, B5, C5, D5, E5, F5, G5, H5, 
+    A6, B6, C6, D6, E6, F6, G6, H6, 
+    A7, B7, C7, D7, E7, F7, G7, H7, 
+    A8, B8, C8, D8, E8, F8, G8, H8, 
+
 }
 
 #[repr(u8)]
@@ -48,7 +49,7 @@ pub enum Rank {
 impl Pos {
     #[inline(always)]
     pub const fn new(file: File, rank: Rank) -> Self {
-        match Self::from_u8(file as u8 * 8 + rank as u8) {
+        match Self::from_u8(rank as u8 * 8 + file as u8) {
             Some(x) => x,
             None => unreachable!(),
         }
@@ -57,22 +58,23 @@ impl Pos {
     #[inline]
     #[rustfmt::skip]
     pub const fn from_u8(pos: u8) -> Option<Self> {
+        use Pos::*;
         Some(match pos {
-            0 => Pos::A1,    1 => Pos::A2,    2 => Pos::A3,    3 => Pos::A4,    4 => Pos::A5,    5 => Pos::A6,    6 => Pos::A7,    7 => Pos::A8,
-            8 => Pos::B1,    9 => Pos::B2,    10 => Pos::B3,    11 => Pos::B4,    12 => Pos::B5,    13 => Pos::B6,    14 => Pos::B7,    15 => Pos::B8,
-            16 => Pos::C1,    17 => Pos::C2,    18 => Pos::C3,    19 => Pos::C4,    20 => Pos::C5,    21 => Pos::C6,    22 => Pos::C7,    23 => Pos::C8,
-            24 => Pos::D1,    25 => Pos::D2,    26 => Pos::D3,    27 => Pos::D4,    28 => Pos::D5,    29 => Pos::D6,    30 => Pos::D7,    31 => Pos::D8,
-            32 => Pos::E1,    33 => Pos::E2,    34 => Pos::E3,    35 => Pos::E4,    36 => Pos::E5,    37 => Pos::E6,    38 => Pos::E7,    39 => Pos::E8,
-            40 => Pos::F1,    41 => Pos::F2,    42 => Pos::F3,    43 => Pos::F4,    44 => Pos::F5,    45 => Pos::F6,    46 => Pos::F7,    47 => Pos::F8,
-            48 => Pos::G1,    49 => Pos::G2,    50 => Pos::G3,    51 => Pos::G4,    52 => Pos::G5,    53 => Pos::G6,    54 => Pos::G7,    55 => Pos::G8,
-            56 => Pos::H1,    57 => Pos::H2,    58 => Pos::H3,    59 => Pos::H4,    60 => Pos::H5,    61 => Pos::H6,    62 => Pos::H7,    63 => Pos::H8,
+            0 => A1, 1 => B1, 2 => C1, 3 => D1, 4 => E1, 5 => F1, 6 => G1, 7 => H1, 
+            8 => A2, 9 => B2, 10 => C2, 11 => D2, 12 => E2, 13 => F2, 14 => G2, 15 => H2, 
+            16 => A3, 17 => B3, 18 => C3, 19 => D3, 20 => E3, 21 => F3, 22 => G3, 23 => H3, 
+            24 => A4, 25 => B4, 26 => C4, 27 => D4, 28 => E4, 29 => F4, 30 => G4, 31 => H4, 
+            32 => A5, 33 => B5, 34 => C5, 35 => D5, 36 => E5, 37 => F5, 38 => G5, 39 => H5, 
+            40 => A6, 41 => B6, 42 => C6, 43 => D6, 44 => E6, 45 => F6, 46 => G6, 47 => H6, 
+            48 => A7, 49 => B7, 50 => C7, 51 => D7, 52 => E7, 53 => F7, 54 => G7, 55 => H7, 
+            56 => A8, 57 => B8, 58 => C8, 59 => D8, 60 => E8, 61 => F8, 62 => G8, 63 => H8, 
             64.. => return None
         })
     }
 
     #[inline(always)]
     pub const fn file(self) -> File {
-        match File::from_u8(self as u8 / 8) {
+        match File::from_u8(self as u8 % 8) {
             Some(rank) => rank,
             None => unreachable!(),
         }
@@ -80,7 +82,7 @@ impl Pos {
 
     #[inline(always)]
     pub const fn rank(self) -> Rank {
-        match Rank::from_u8(self as u8 % 8) {
+        match Rank::from_u8(self as u8 / 8) {
             Some(rank) => rank,
             None => unreachable!(),
         }
@@ -504,11 +506,34 @@ impl Rank {
 }
 
 #[test]
-fn test() {
-    extern crate std;
+fn test_ascii_byte() {
     for i in b'a'..=b'h' {
         let file = File::from_u8(i - b'a').unwrap();
-        std::eprintln!("{i} {file}");
         assert_eq!(file, File::from_ascii_byte(i).unwrap())
+    }
+}
+
+#[test]
+fn test_file_and_rank() {
+    for pos in Pos::all() {
+        assert_eq!(Pos::new(pos.file(), pos.rank()), pos);
+    }
+}
+
+#[test]
+fn test_file_and_rank_into_pos() {
+    for file in File::all() {
+        for rank in Rank::all() {
+            let pos = Pos::new(file, rank);
+            assert_eq!(pos.file(), file);
+            assert_eq!(pos.rank(), rank);
+        }
+    }
+}
+
+#[test]
+fn test_from_u8() {
+    for pos in Pos::all() {
+        assert_eq!(Pos::from_u8(pos as u8), Some(pos));
     }
 }

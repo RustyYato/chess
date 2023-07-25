@@ -16,6 +16,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let target_dir = Path::new(&target_dir);
 
+    #[cfg(not(miri))]
     assert!(target_dir.exists());
 
     write_rook_rays(target_dir)?;
@@ -28,11 +29,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     write_bishop_moves(target_dir)?;
     write_rook_moves(target_dir)?;
     write_zobrist(target_dir)?;
+    #[cfg(feature = "book")]
     write_openning_book(target_dir)?;
 
     Ok(())
 }
 
+#[cfg(feature = "book")]
 fn write_openning_book(target_dir: &Path) -> Result<(), Box<dyn Error>> {
     let mut book = BufWriter::new(File::create(target_dir.join("book.rs"))?);
     let (book_data, names) = chess_lookup_generator::book::read_eco()?;

@@ -376,7 +376,7 @@ impl Board {
 
     pub const fn standard() -> Self {
         Self {
-            zobrist: 2044085020143996643,
+            zobrist: 9406092833587483707,
             turn: Color::White,
             castle_rights: castle_rights::CastleRights::full(),
             enpassant_target: OptionalFile::None,
@@ -758,12 +758,11 @@ mod tests {
     #[test]
     fn test_standard_is_correct() {
         let board = Board::standard();
+        let standard = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
+            .parse()
+            .unwrap();
 
-        assert_eq!(
-            board,
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0"
-                .parse()
-                .unwrap()
-        );
+        assert_eq!(board, standard);
+        assert_eq!(board.zobrist, standard.zobrist);
     }
 }
