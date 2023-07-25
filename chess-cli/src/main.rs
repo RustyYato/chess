@@ -3,7 +3,7 @@ use std::time::Duration;
 use chess_engine::{DurationTimeout, Engine, ThreeFold};
 use chess_movegen::Board;
 
-use rand::prelude::IteratorRandom;
+use rand::{prelude::IteratorRandom, Rng};
 
 mod bot_fight;
 mod logs;
@@ -27,7 +27,6 @@ enum ArgKind {
 }
 
 fn main() {
-
     let args: Args = clap::Parser::parse();
 
     logs::init(args.verbose as i8 - args.quiet as i8);
@@ -46,9 +45,17 @@ fn main() {
 
             let mut board = board.unwrap_or_else(Board::standard);
 
-            while let Some(mv) = book_moves.into_iter().choose(&mut rand::thread_rng()) {
-                eprintln!("{board:?}");
+            loop {
+                let x = book_moves.into_iter().count();
+                if x == 0 {
+                    break;
+                }
 
+                let x = rand::thread_rng()
+                    .sample(rand::distributions::WeightedIndex::new((1..=x).rev()).unwrap());
+                let mv = book_moves.into_iter().nth(x).unwrap();
+
+                eprintln!("{board:?}");
                 assert!(board.move_mut(chess_movegen::ChessMove {
                     source: mv.source,
                     dest: mv.dest,
