@@ -137,6 +137,11 @@ impl Pos {
     pub const fn all() -> AllPosIter {
         AllPosIter { pos: 0 }
     }
+
+    #[inline]
+    pub fn flip_rank(&self) -> Pos {
+        Self::new(self.file(), self.rank().flip())
+    }
 }
 
 impl File {
@@ -290,6 +295,14 @@ impl Rank {
         RankIter {
             rank: self,
             files: File::all(),
+        }
+    }
+
+    #[inline]
+    pub const fn flip(self) -> Rank {
+        match Self::from_u8(7 - self as u8) {
+            Some(rank) => rank,
+            None => unreachable!(),
         }
     }
 }

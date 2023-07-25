@@ -29,6 +29,7 @@ pub use score::Score;
 pub struct Engine {
     pub moves_evaluated: u64,
     pub max_depth: u16,
+    pub positional: bool,
 }
 
 #[derive(Default)]
@@ -624,28 +625,48 @@ impl Engine {
         let mut white_endgame_score = 0;
         let mut black_endgame_score = 0;
 
-        match piece_score.cmp(&0) {
+        let is_endgame = match piece_score.cmp(&0) {
             std::cmp::Ordering::Less => {
-                if black_piece_score < 800 + 500 * 3 {
-                    white_endgame_score += self.eval_endgame(board, Color::Black)
+                if black_piece_score < 800 + 500 * 2 {
+                    white_endgame_score += self.eval_endgame(board, Color::Black);
+                    true
+                } else {
+                    false
                 }
             }
-            std::cmp::Ordering::Equal => (),
+            std::cmp::Ordering::Equal => {
+                black_piece_score < 800 + 500 * 2 && white_piece_score < 800 + 500 * 2
+            }
             std::cmp::Ordering::Greater => {
-                if white_piece_score < 800 + 500 * 3 {
-                    black_endgame_score += self.eval_endgame(board, Color::White)
+                if white_piece_score < 800 + 500 * 2 {
+                    black_endgame_score += self.eval_endgame(board, Color::White);
+                    true
+                } else {
+                    false
                 }
             }
-        }
+        };
 
-        let white_score = white_piece_score * 100 + white_endgame_score;
-        let black_score = black_piece_score * 100 + black_endgame_score;
+        let king_pos_score = if self.positional {
+            if is_endgame {
+                i32::from(WHITE_KING_END_GAME_MAP[board.king_sq(Color::White)])
+                    - i32::from(WHITE_KING_END_GAME_MAP[board.king_sq(Color::Black).flip_rank()])
+            } else {
+                i32::from(WHITE_KING_EARLY_GAME_MAP[board.king_sq(Color::White)])
+                    - i32::from(WHITE_KING_EARLY_GAME_MAP[board.king_sq(Color::Black).flip_rank()])
+            }
+        } else {
+            0
+        };
+
+        let white_score = white_piece_score + white_endgame_score;
+        let black_score = black_piece_score + black_endgame_score;
 
         tracing::trace!(current_depth, ?white_score, ?black_score);
 
         // assert!(white_score > black_score);
 
-        let piece_score = white_score - black_score;
+        let piece_score = white_score - black_score + king_pos_score;
 
         Score::Raw(piece_score)
     }
@@ -674,13 +695,59 @@ impl Engine {
     fn score_pieces(&mut self, board: &Board, color: Color) -> i32 {
         let my_pieces = board[color];
 
-        let my_queen_score = (my_pieces & board[Piece::Queen]).count() as i32 * 800;
+        let my_queen_score = (my_pieces & board[Piece::Queen]).count() as i32 * 900;
         let my_rook_score = (my_pieces & board[Piece::Rook]).count() as i32 * 500;
         let my_bishop_score = (my_pieces & board[Piece::Bishop]).count() as i32 * 330;
-        let my_knight_score = (my_pieces & board[Piece::Knight]).count() as i32 * 300;
+        let my_knight_score = (my_pieces & board[Piece::Knight]).count() as i32 * 320;
         let my_pawn_score = (my_pieces & board[Piece::Pawn]).count() as i32 * 100;
 
-        my_queen_score + my_rook_score + my_bishop_score + my_knight_score + my_pawn_score
+        let mut position_score = 0i32;
+
+        if self.positional {
+            for queen in my_pieces & board[Piece::Queen] {
+                position_score += i32::from(QUEEN_MID_GAME_MAP[queen])
+            }
+
+            for knight in my_pieces & board[Piece::Knight] {
+                position_score += i32::from(KNIGHT_EARLY_GAME_MAP[knight])
+            }
+
+            match color {
+                Color::White => {
+                    for rook in my_pieces & board[Piece::Rook] {
+                        position_score += i32::from(WHITE_ROOK_MID_GAME_MAP[rook])
+                    }
+
+                    for bishop in my_pieces & board[Piece::Bishop] {
+                        position_score += i32::from(WHITE_BISHOP_MID_GAME_MAP[bishop])
+                    }
+
+                    for pawn in my_pieces & board[Piece::Pawn] {
+                        position_score += i32::from(WHITE_PAWN_MID_GAME_MAP[pawn])
+                    }
+                }
+                Color::Black => {
+                    for rook in my_pieces & board[Piece::Rook].flip_ranks() {
+                        position_score += i32::from(WHITE_ROOK_MID_GAME_MAP[rook])
+                    }
+
+                    for bishop in my_pieces & board[Piece::Bishop].flip_ranks() {
+                        position_score += i32::from(WHITE_BISHOP_MID_GAME_MAP[bishop])
+                    }
+
+                    for pawn in my_pieces & board[Piece::Pawn].flip_ranks() {
+                        position_score += i32::from(WHITE_PAWN_MID_GAME_MAP[pawn])
+                    }
+                }
+            }
+        }
+
+        my_queen_score
+            + my_rook_score
+            + my_bishop_score
+            + my_knight_score
+            + my_pawn_score
+            + position_score
     }
 
     fn insuffient_material(&self, board: &Board) -> bool {
@@ -701,8 +768,108 @@ impl Engine {
 }
 
 #[rustfmt::skip]
+const KNIGHT_EARLY_GAME_MAP: [i8; 64] = transpose([
+    -50,-40,-30,-30,-30,-30,-40,-50,
+    -40,-20,  0,  0,  0,  0,-20,-40,
+    -30,  0, 10, 15, 15, 10,  0,-30,
+    -30,  5, 15, 20, 20, 15,  5,-30,
+    -30,  0, 15, 20, 20, 15,  0,-30,
+    -30,  5, 10, 15, 15, 10,  5,-30,
+    -40,-20,  0,  5,  5,  0,-20,-40,
+    -50,-40,-30,-30,-30,-30,-40,-50,
+]);
+
+#[rustfmt::skip]
+const WHITE_PAWN_MID_GAME_MAP: [i8; 64] = transpose([
+    0,  0,  0,  0,  0,  0,  0,  0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    5,  5, 10, 25, 25, 10,  5,  5,
+    0,  0,  0, 20, 20,  0,  0,  0,
+    5, -5,-10,  0,  0,-10, -5,  5,
+    5, 10, 10,-20,-20, 10, 10,  5,
+    0,  0,  0,  0,  0,  0,  0,  0
+]);
+
+#[rustfmt::skip]
+const QUEEN_MID_GAME_MAP: [i8; 64] = transpose([
+    -20,-10,-10, -5, -5,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5,  5,  5,  5,  0,-10,
+     -5,  0,  5,  5,  5,  5,  0, -5,
+     -5,  0,  5,  5,  5,  5,  0, -5,
+    -10,  0,  5,  5,  5,  5,  0,-10,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -20,-10,-10, -5, -5,-10,-10,-20
+]);
+
+#[rustfmt::skip]
+const WHITE_BISHOP_MID_GAME_MAP: [i8; 64] = transpose([
+    -20,-10,-10,-10,-10,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5, 10, 10,  5,  0,-10,
+    -10,  5,  5, 10, 10,  5,  5,-10,
+    -10,  0, 10, 10, 10, 10,  0,-10,
+    -10, 10, 10, 10, 10, 10, 10,-10,
+    -10,  5,  0,  0,  0,  0,  5,-10,
+    -20,-10,-10,-10,-10,-10,-10,-20,
+]);
+
+#[rustfmt::skip]
+const WHITE_ROOK_MID_GAME_MAP: [i8; 64] = transpose([
+    0,  0,  0,  0,  0,  0,  0,  0,
+    5, 10, 10, 10, 10, 10, 10,  5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+   -5,  0,  0,  0,  0,  0,  0, -5,
+    0,  0,  0,  5,  5,  0,  0,  0
+]);
+
+#[rustfmt::skip]
+const WHITE_KING_EARLY_GAME_MAP: [i8; 64] = transpose([
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -20,-30,-30,-40,-40,-30,-30,-20,
+    -10,-20,-20,-20,-20,-20,-20,-10,
+     20, 20,  0,  0,  0,  0, 20, 20,
+     20, 30, 10,  0,  0, 10, 30, 20
+]);
+
+#[rustfmt::skip]
+const WHITE_KING_END_GAME_MAP: [i8; 64] = transpose([
+    -50,-40,-30,-20,-20,-30,-40,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-30,  0,  0,  0,  0,-30,-30,
+    -50,-30,-30,-30,-30,-30,-30,-50
+]);
+
+const fn transpose<T: Copy>(input: [T; 64]) -> [T; 64] {
+    let mut output = input;
+
+    let mut i = 0;
+
+    while i < 64 {
+        let x = i % 8;
+        let y = i / 8;
+
+        output[i] = input[(7 - x) * 8 + y];
+
+        i += 1;
+    }
+
+    output
+}
+
 static DIST_FROM_EDGE: [u8; 64] = {
-    use chess_bitboard::{File, Rank, Pos};
+    use chess_bitboard::{File, Pos, Rank};
     let mut scores = [0; 64];
 
     let mut i = 0;
@@ -721,18 +888,12 @@ static DIST_FROM_EDGE: [u8; 64] = {
         let to_1 = rank.dist_to(Rank::_1);
         let to_8 = rank.dist_to(Rank::_8);
 
-        let to_file_edge = if to_a < to_h {
-            to_a
-        } else {
-            to_h
-        };
-        let to_rank_edge = if to_1 < to_8 {
-            to_1
-        } else {
-            to_8
-        };
+        let to_file_edge = if to_a < to_h { to_a } else { to_h };
+        let to_rank_edge = if to_1 < to_8 { to_1 } else { to_8 };
 
-        scores[i] = to_file_edge * to_rank_edge * 10 + to_file_edge * to_file_edge + to_rank_edge * to_rank_edge;
+        scores[i] = to_file_edge * to_rank_edge * 10
+            + to_file_edge * to_file_edge
+            + to_rank_edge * to_rank_edge;
 
         i += 1;
     }
@@ -745,7 +906,7 @@ static DIST_FROM_EDGE: [u8; 64] = {
 fn test() {
     for rank in chess_bitboard::Rank::all().rev() {
         for pos in rank {
-            print!("{:2} ", DIST_FROM_EDGE[pos]);
+            print!("{:2} ", WHITE_BISHOP_MID_GAME_MAP[pos]);
         }
 
         println!();
