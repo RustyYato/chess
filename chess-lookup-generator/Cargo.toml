@@ -7,7 +7,18 @@ edition = "2021"
 
 [features]
 
-book = ['chess-movegen', 'pgn-reader']
+default = ['book']
+book = [
+    'chess-movegen',
+    'pgn-reader',
+    'zstd',
+    'readable',
+    'memchr',
+    'bstr',
+    'bytesize',
+    'serde',
+    'serde_json',
+]
 
 [dependencies.chess-bitboard]
 path = '../chess-bitboard'
@@ -22,4 +33,33 @@ features = ['small_rng']
 
 [dependencies.pgn-reader]
 version = '0.25'
+optional = true
+
+[dependencies.zstd]
+version = '0.12'
+optional = true
+
+[dependencies.readable]
+version = '0.8'
+optional = true
+
+[dependencies.bytesize]
+version = '1'
+optional = true
+
+[dependencies.memchr]
+version = '2'
+optional = true
+
+[dependencies.bstr]
+version = '1'
+optional = true
+
+[dependencies.serde]
+version = '1'
+features = ['derive']
+optional = true
+
+[dependencies.serde_json]
+version = '1'
 optional = true

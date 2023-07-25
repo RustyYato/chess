@@ -16,7 +16,7 @@ chess-engine = { path = '../chess-engine' }
 wasm-bindgen = '0.2'
 parse_duration = '2'
 
-colorz = { version = '1', features = ['strip-colors'] }
+colorz = { version = '1' }
 tracing = { version = '0.1' }
 tracing-wasm = '0.2'
 console_error_panic_hook = '0.1'

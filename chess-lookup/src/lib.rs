@@ -5,9 +5,11 @@ use chess_bitboard::{BitBoard, Color, File, Piece, Pos, Rank};
 mod between;
 mod bishop_moves;
 mod bishop_rays;
-mod book;
+// mod book;
 mod king_moves;
 mod knight_moves;
+#[allow(clippy::all)]
+mod lichess_book;
 mod line;
 mod pawn;
 mod rook_moves;
@@ -244,7 +246,7 @@ impl core::fmt::Debug for BookMoves {
 }
 
 pub const INITIAL_BOOOK_MOVES: BookMoves = BookMoves {
-    index: book::BOOK_SIZE - 1,
+    index: lichess_book::BOOK_SIZE - 1,
 };
 pub const EMPTY_BOOK_MOVES: BookMoves = BookMoves { index: 0 };
 
@@ -274,12 +276,14 @@ impl Iterator for BookMovesIter {
     type Item = BookMove;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let offset = unsafe { *book::BOOK.get_unchecked(self.index) } as usize;
+        debug_assert!(self.index < lichess_book::BOOK_SIZE);
+
+        let offset = unsafe { *lichess_book::BOOK.get_unchecked(self.index) } as usize;
         if offset == 0 {
             return None;
         }
 
-        let mv = unsafe { *book::BOOK.get_unchecked(self.index - 1) } as usize;
+        let mv = unsafe { *lichess_book::BOOK.get_unchecked(self.index - 1) } as usize;
         let child_index = self.index - 2;
         self.index = self.index.checked_sub(offset + 1)?;
 
@@ -300,12 +304,27 @@ mod tests {
 
     #[test]
     fn test_all_book_indices() {
-        fn walk(book_moves: BookMoves) {
+        fn walk(book_moves: BookMoves, current_depth: u32, f: &mut impl FnMut(u32, u32)) -> u32 {
+            let mut depth = 0;
             for x in book_moves {
-                walk(x.children);
+                depth = depth.max(1 + walk(x.children, current_depth + 1, f));
             }
+            f(depth, current_depth);
+            depth
         }
 
-        walk(INITIAL_BOOOK_MOVES);
+        let mut min = u32::MAX;
+        let mut max = 0;
+
+        walk(INITIAL_BOOOK_MOVES, 0, &mut |depth, current_depth| {
+            let trie_depth = depth + current_depth;
+
+            min = trie_depth.min(min);
+            max = trie_depth.max(max);
+            // dbg!((depth + current_depth));
+            // assert_eq!(trie_depth, 9);
+            // assert!();
+        });
+        assert_eq!((min, max), (8, 8));
     }
 }

@@ -2,6 +2,8 @@ use chess_bitboard::{BitBoard, File, Pos, Rank};
 pub use magic::MagicTable;
 
 #[cfg(feature = "book")]
+pub mod book;
+#[cfg(feature = "book")]
 pub mod eco_book;
 mod magic;
 

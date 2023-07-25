@@ -5,3 +5,4 @@ flamegraph.svg
 *.log
 .env
 /bots
+temp

@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use std::{error::Error, fs::File, io::BufWriter, io::Write, path::Path};
 
 use chess_bitboard::{Color, File as ChessFile, Piece, Pos};
@@ -19,26 +21,29 @@ fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(miri))]
     assert!(target_dir.exists());
 
-    write_rook_rays(target_dir)?;
-    write_bishop_rays(target_dir)?;
-    write_knight_moves(target_dir)?;
-    write_king_moves(target_dir)?;
-    write_pawn_moves(target_dir)?;
-    write_between(target_dir)?;
-    write_line(target_dir)?;
-    write_bishop_moves(target_dir)?;
-    write_rook_moves(target_dir)?;
-    write_zobrist(target_dir)?;
+    // write_rook_rays(target_dir)?;
+    // write_bishop_rays(target_dir)?;
+    // write_knight_moves(target_dir)?;
+    // write_king_moves(target_dir)?;
+    // write_pawn_moves(target_dir)?;
+    // write_between(target_dir)?;
+    // write_line(target_dir)?;
+    // write_bishop_moves(target_dir)?;
+    // write_rook_moves(target_dir)?;
+    // write_zobrist(target_dir)?;
+    // #[cfg(feature = "book")]
+    // write_openning_book(target_dir)?;
     #[cfg(feature = "book")]
-    write_openning_book(target_dir)?;
+    write_lichess_openning_book(target_dir)?;
 
     Ok(())
 }
 
 #[cfg(feature = "book")]
 fn write_openning_book(target_dir: &Path) -> Result<(), Box<dyn Error>> {
-    let mut book = BufWriter::new(File::create(target_dir.join("book.rs"))?);
     let (book_data, names) = chess_lookup_generator::eco_book::read_eco()?;
+
+    let mut book = BufWriter::new(File::create(target_dir.join("book.rs"))?);
 
     write!(
         book,
@@ -50,6 +55,24 @@ pub(super) static BOOK_NAMES: [&str; {2}] = {3:?};",
         book_data,
         names.len(),
         names,
+    )?;
+
+    Ok(())
+}
+
+#[cfg(feature = "book")]
+fn write_lichess_openning_book(target_dir: &Path) -> Result<(), Box<dyn Error>> {
+    let book_data = chess_lookup_generator::book::read_lichess_games()?;
+
+    let mut book = BufWriter::new(File::create(target_dir.join("lichess_book.rs"))?);
+
+    write!(
+        book,
+        "
+pub(super) const BOOK_SIZE: usize = {0};
+pub(super) static BOOK: [u16; {0}] = {1:?};",
+        book_data.len(),
+        book_data,
     )?;
 
     Ok(())
